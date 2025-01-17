@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Document\HasRelations;
+use App\Models\Document\HasScopes;
 use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
 {
-    use HasRelations;
+    use HasRelations, HasScopes;
 
     /**
      * The attributes that are mass assignable.

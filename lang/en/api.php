@@ -14,6 +14,10 @@ return [
     'document' => [
         'store' => [
             'success' => 'Document: :name created successfully',
+        ],
+        'statuses' => [
+            'new' => 'New',
+            'read' => 'Read',
         ]
     ]
 ];

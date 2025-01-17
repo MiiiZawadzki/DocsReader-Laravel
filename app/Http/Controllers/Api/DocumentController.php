@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Document\StoreRequest;
 use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentController extends Controller
 {
@@ -18,9 +19,16 @@ class DocumentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        // TODO
+        try {
+            $documents = $this->documentService->get(Auth::user());
+            return response()->json([
+                'documents' => $documents,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 
     /**
