@@ -6,6 +6,7 @@ use App\Data\DTO\CreateDocumentDTO;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\Transformers\IndexDocumentsDataTransformer;
+use App\Services\Transformers\ShowDocumentDataTransformer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -48,6 +49,16 @@ class DocumentService
             'declaration_message' => $dataArray['declaration'],
             'delay' => $dataArray['delay'],
         ]);
+    }
+
+    /**
+     * @param Document $document
+     * @param User $user
+     * @return array
+     */
+    public function show(Document $document, User $user): array
+    {
+        return ShowDocumentDataTransformer::transform($document, $user);
     }
 
     /**

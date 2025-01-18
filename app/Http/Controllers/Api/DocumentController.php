@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Data\DTO\CreateDocumentDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Document\ShowRequest;
 use App\Http\Requests\Api\Document\StoreRequest;
+use App\Models\Document;
 use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +20,8 @@ class DocumentController extends Controller
 
     /**
      * Display a listing of the resource.
+     *
+     * @return JsonResponse
      */
     public function index(): JsonResponse
     {
@@ -41,6 +45,9 @@ class DocumentController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
+     * @param StoreRequest $request
+     * @return JsonResponse
      */
     public function store(StoreRequest $request): JsonResponse
     {
@@ -56,10 +63,21 @@ class DocumentController extends Controller
 
     /**
      * Display the specified resource.
+     *
+     * @param ShowRequest $request
+     * @return JsonResponse
      */
-    public function show(string $id)
+    public function show(ShowRequest $request): JsonResponse
     {
-        // TODO
+        try {
+            $document = Document::where('uuid', $request->route('document'))->first();
+            $documentData = $this->documentService->show($document, Auth::user());
+            return response()->json([
+                'document' => $documentData,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 
     /**

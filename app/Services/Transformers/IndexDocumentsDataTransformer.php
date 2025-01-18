@@ -31,7 +31,7 @@ class IndexDocumentsDataTransformer
      * @param User $user
      * @return array
      */
-    private static function getStatus(Document $document, User $user): array
+    protected static function getStatus(Document $document, User $user): array
     {
         $read = $document
             ->reads

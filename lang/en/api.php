@@ -18,6 +18,7 @@ return [
         'statuses' => [
             'new' => 'New',
             'read' => 'Read',
-        ]
+        ],
+        'not_found' => 'Document not found.'
     ]
 ];
