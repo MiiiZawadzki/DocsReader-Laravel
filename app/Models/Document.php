@@ -6,6 +6,9 @@ use App\Models\Document\HasRelations;
 use App\Models\Document\HasScopes;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperDocument
+ */
 class Document extends Model
 {
     use HasRelations, HasScopes;
