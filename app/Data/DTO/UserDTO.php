@@ -3,6 +3,7 @@
 namespace App\Data\DTO;
 
 use App\Models\User;
+use App\Models\UserPermission;
 
 class UserDTO
 {
@@ -14,7 +15,11 @@ class UserDTO
     {
         $this->name = $user->getAttribute('name');
         $this->email = $user->getAttribute('email');
-        $this->permissions = [];
+        $this->permissions = $user->userPermissions
+            ->map(
+                fn(UserPermission $userPermission) => $userPermission->permission->type
+            )
+            ->toArray();
     }
 
     public function __toString(): string

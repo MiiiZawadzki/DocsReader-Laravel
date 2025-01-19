@@ -12,7 +12,9 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', function (Request $request) {
-        return new UserDTO($request->user());
+        return new UserDTO(
+            $request->user()->load(['userPermissions', 'userPermissions.permission'])
+        );
     });
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::resource('documents', DocumentController::class);
