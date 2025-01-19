@@ -5,6 +5,7 @@ namespace App\Models\User;
 use App\Models\Document;
 use App\Models\DocumentRead;
 use App\Models\UserDocument;
+use App\Models\UserPermission;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 trait HasRelations
@@ -31,5 +32,13 @@ trait HasRelations
     function documents(): HasMany
     {
         return $this->hasMany(Document::class, 'user_id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    function userPermissions(): HasMany
+    {
+        return $this->hasMany(UserPermission::class, 'user_id');
     }
 }
