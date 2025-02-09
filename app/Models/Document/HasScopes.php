@@ -18,4 +18,14 @@ trait HasScopes
             $builder->where('user_id', $user->getKey());
         });
     }
+
+    /**
+     * @param Builder $query
+     * @param User $user
+     * @return void
+     */
+    function scopeForManager(Builder $query, User $user): void
+    {
+        $query->where('user_id', $user->getKey());
+    }
 }
