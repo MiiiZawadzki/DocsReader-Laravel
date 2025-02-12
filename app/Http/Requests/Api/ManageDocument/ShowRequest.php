@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Api\Document;
+namespace App\Http\Requests\Api\ManageDocument;
 
 use App\Models\Document;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,14 +17,8 @@ class ShowRequest extends FormRequest
             return false;
         }
 
-        $isAssigned = Document::where('uuid', $id)
-            ->forUser(Auth::user())
-            ->exists();
-
-        $isManager = Document::where('uuid', $id)
+        return Document::where('uuid', $id)
             ->forManager(Auth::user())
             ->exists();
-
-        return $isAssigned || $isManager;
     }
 }

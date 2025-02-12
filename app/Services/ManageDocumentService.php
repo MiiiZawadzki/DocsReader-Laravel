@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\Transformers\IndexDocumentsDataTransformer;
+use App\Services\Transformers\ShowDocumentDataTransformer;
 use Illuminate\Support\Collection;
 
 class ManageDocumentService
@@ -21,5 +22,15 @@ class ManageDocumentService
             ->map(
                 fn(Document $document) => IndexDocumentsDataTransformer::transform($document, $user)
             );
+    }
+
+    /**
+     * @param Document $document
+     * @param User $user
+     * @return array
+     */
+    public function show(Document $document, User $user): array
+    {
+        return ShowDocumentDataTransformer::transform($document, $user);
     }
 }
