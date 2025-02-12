@@ -24,6 +24,6 @@ class FileController extends Controller
             abort(404, __('api.document.not_found'));
         }
 
-        return Storage::disk('documents')->download($document->file_path);
+        return Storage::disk('documents')->download($document->file_path, $document->source_name);
     }
 }
