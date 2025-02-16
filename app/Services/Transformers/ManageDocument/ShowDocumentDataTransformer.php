@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Services\Transformers;
+namespace App\Services\Transformers\ManageDocument;
 
 use App\Models\Document;
 use App\Models\User;
+use App\Services\Transformers\IndexDocumentsDataTransformer;
+use Illuminate\Support\Facades\Storage;
 
 class ShowDocumentDataTransformer extends IndexDocumentsDataTransformer
 {
@@ -26,6 +28,8 @@ class ShowDocumentDataTransformer extends IndexDocumentsDataTransformer
             "dateTag" => $document->getAttribute('date_from')->format('Y-m-d'),
             "dateFrom" => $document->getAttribute('date_from')->format('Y-m-d'),
             "dateTo" => $document->getAttribute('date_to')?->format('Y-m-d') ?? '',
+            "fileName" => $document->getAttribute('source_name'),
+            "fileSize" => Storage::disk('documents')->size($document->getAttribute('file_path')) / (1024 * 1024),
             "fileUrl" => route('getFile', ['document' => $document->getAttribute('uuid')]),
         ];
     }

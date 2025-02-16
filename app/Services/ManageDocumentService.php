@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\Transformers\IndexDocumentsDataTransformer;
-use App\Services\Transformers\ShowDocumentDataTransformer;
+use App\Services\Transformers\ManageDocument\ShowDocumentDataTransformer;
 use Illuminate\Support\Collection;
 
 class ManageDocumentService
