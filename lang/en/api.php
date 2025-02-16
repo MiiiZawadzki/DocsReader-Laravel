@@ -15,6 +15,9 @@ return [
         'store' => [
             'success' => 'Document: :name created successfully',
         ],
+        'update' => [
+            'success' => 'Document: :name updated successfully',
+        ],
         'statuses' => [
             'new' => 'New',
             'read' => 'Read',

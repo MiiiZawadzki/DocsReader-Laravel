@@ -33,12 +33,13 @@ class DocumentService
      */
     public function store(CreateDocumentDTO $dto): Document
     {
+        $uuid = Str::uuid();
         $file = $dto->getFile();
         $dataArray = $dto->getFormData();
-        $path = $this->saveFile($file);
+        $path = $this->saveFile($file, $uuid);
 
         return Document::create([
-            'uuid' => Str::uuid(),
+            'uuid' => $uuid,
             'name' => $dataArray['title'],
             'source_name' => $file->getClientOriginalName(),
             'description' => $dataArray['description'],
@@ -63,10 +64,11 @@ class DocumentService
 
     /**
      * @param UploadedFile $file
+     * @param string $uuid
      * @return string
      */
-    private function saveFile(UploadedFile $file): string
+    private function saveFile(UploadedFile $file, string $uuid): string
     {
-        return $file->store('uploads', 'documents');
+        return $file->store("uploads/$uuid", 'documents');
     }
 }
