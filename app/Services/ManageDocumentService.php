@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Data\DTO\UpdateDocumentDTO;
 use App\Models\Document;
 use App\Models\User;
+use App\Models\UserDocument;
 use App\Services\Transformers\IndexDocumentsDataTransformer;
 use App\Services\Transformers\ManageDocument\ShowDocumentDataTransformer;
 use Illuminate\Http\UploadedFile;
@@ -67,6 +68,47 @@ class ManageDocumentService
     public function show(Document $document, User $user): array
     {
         return ShowDocumentDataTransformer::transform($document, $user);
+    }
+
+    /**
+     * @param Document $document
+     * @return array
+     */
+    public function documentUsers(Document $document): array
+    {
+        return User::with(['userDocuments'])
+            ->get()
+            ->map(fn(User $user) => [
+                'id' => $user->getKey(),
+                'name' => $user->name,
+                'assign' => $user->userDocuments->contains('document_id', $document->getKey())
+            ])
+            ->toArray();
+    }
+
+    /**
+     * @param Document $document
+     * @param User $user
+     * @param bool $assign
+     * @param User $changedBy
+     * @return void
+     */
+    public function assignUser(Document $document, User $user, bool $assign, User $changedBy): void
+    {
+        if ($assign) {
+            UserDocument::firstOrCreate(
+                [
+                    'user_id' => $user->getKey(),
+                    'document_id' => $document->getKey(),
+                ],
+                ['created_by' => $changedBy->getKey()]
+            );
+        } else {
+            UserDocument::where([
+                'user_id' => $user->getKey(),
+                'document_id' => $document->getKey(),
+            ])->delete();
+        }
     }
 
     /**

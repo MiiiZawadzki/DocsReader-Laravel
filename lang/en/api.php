@@ -18,6 +18,11 @@ return [
         'update' => [
             'success' => 'Document: :name updated successfully',
         ],
+        'manage' => [
+            'userAssignment' => [
+                'success' => 'User assignment successful',
+            ]
+        ],
         'statuses' => [
             'new' => 'New',
             'read' => 'Read',

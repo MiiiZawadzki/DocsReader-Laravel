@@ -3,10 +3,11 @@
 namespace App\Http\Requests\Api\ManageDocument;
 
 use App\Models\Document;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
-class ShowRequest extends FormRequest
+class AssignUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,5 +22,17 @@ class ShowRequest extends FormRequest
         return Document::where('uuid', $id)
             ->forManager(Auth::user())
             ->exists();
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'assign' => 'required|boolean',
+        ];
     }
 }

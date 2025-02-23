@@ -6,7 +6,7 @@ use App\Models\Document;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
-class ShowRequest extends FormRequest
+class GetUsersRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

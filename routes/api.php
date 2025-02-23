@@ -22,6 +22,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/manage/documents', [ManageDocumentController::class, 'index']);
     Route::get('/manage/documents/{document}', [ManageDocumentController::class, 'show']);
+    Route::get('/manage/documents/{document}/users', [ManageDocumentController::class, 'users']);
+    Route::put('/manage/documents/{document}/users/{user}', [ManageDocumentController::class, 'userAssignment']);
     Route::post('/manage/documents/{document}', [ManageDocumentController::class, 'update']);
     Route::get('/files/{document}', [FileController::class, 'get'])->name('getFile');
 });
