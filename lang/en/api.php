@@ -28,5 +28,10 @@ return [
             'read' => 'Read',
         ],
         'not_found' => 'Document not found.'
-    ]
+    ],
+    'settings' => [
+        'update' => [
+            'success' => 'User data updated successfully',
+        ],
+    ],
 ];

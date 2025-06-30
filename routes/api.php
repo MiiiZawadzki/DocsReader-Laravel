@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\ManageDocumentController;
+use App\Http\Controllers\Api\SettingsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,4 +27,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/manage/documents/{document}/users/{user}', [ManageDocumentController::class, 'userAssignment']);
     Route::post('/manage/documents/{document}', [ManageDocumentController::class, 'update']);
     Route::get('/files/{document}', [FileController::class, 'get'])->name('getFile');
+
+    Route::get('/settings', [SettingsController::class, 'data']);
+    Route::post('/settings/user/name', [SettingsController::class, 'updateName']);
+    Route::post('/settings/user/email', [SettingsController::class, 'updateEmail']);
+    Route::post('/settings/user/password', [SettingsController::class, 'updatePassword']);
 });
