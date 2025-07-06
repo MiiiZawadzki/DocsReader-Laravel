@@ -4,6 +4,7 @@ use App\Data\DTO\UserDTO;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\FileController;
+use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\ManageDocumentController;
 use App\Http\Controllers\Api\SettingsController;
 use Illuminate\Http\Request;
@@ -32,4 +33,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/settings/user/name', [SettingsController::class, 'updateName']);
     Route::post('/settings/user/email', [SettingsController::class, 'updateEmail']);
     Route::post('/settings/user/password', [SettingsController::class, 'updatePassword']);
+
+    Route::get('/home', [HomeController::class, 'data']);
 });

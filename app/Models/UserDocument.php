@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\UserDocument\HasRelations;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class UserDocument extends Model
 {
+    use HasRelations;
+
     /**
      * The attributes that are mass assignable.
      *

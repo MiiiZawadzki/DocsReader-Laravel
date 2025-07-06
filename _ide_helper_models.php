@@ -15,6 +15,7 @@ namespace App\Models{
 /**
  * 
  *
+ * @mixin IdeHelperDocument
  * @property int $id
  * @property string $uuid
  * @property string $name
@@ -33,6 +34,7 @@ namespace App\Models{
  * @property-read \App\Models\User $user
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UserDocument> $userDocuments
  * @property-read int|null $user_documents_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Document forManager(\App\Models\User $user)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Document forUser(\App\Models\User $user)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Document newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Document newQuery()
@@ -50,16 +52,15 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Document whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Document whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Document whereUuid($value)
- * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperDocument {}
+	class Document extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
  * 
  *
+ * @mixin IdeHelperDocumentRead
  * @property int $id
  * @property int $document_id
  * @property int $user_id
@@ -75,16 +76,15 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DocumentRead whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DocumentRead whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DocumentRead whereUserId($value)
- * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperDocumentRead {}
+	class DocumentRead extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
  * 
  *
+ * @mixin IdeHelperPermission
  * @property int $id
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -98,16 +98,15 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Permission whereUpdatedAt($value)
- * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperPermission {}
+	class Permission extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
  * 
  *
+ * @mixin IdeHelperUser
  * @property int $id
  * @property string $name
  * @property string $email
@@ -140,22 +139,23 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
- * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperUser {}
+	class User extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
  * 
  *
+ * @mixin IdeHelperUserDocument
  * @property int $id
  * @property int $document_id
  * @property int $user_id
  * @property int $created_by
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Document $document
+ * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDocument newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDocument newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDocument query()
@@ -165,16 +165,15 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDocument whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDocument whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserDocument whereUserId($value)
- * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperUserDocument {}
+	class UserDocument extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
  * 
  *
+ * @mixin IdeHelperUserPermission
  * @property int $id
  * @property int $user_id
  * @property int $permission_id
@@ -190,9 +189,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPermission wherePermissionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPermission whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UserPermission whereUserId($value)
- * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperUserPermission {}
+	class UserPermission extends \Eloquent {}
 }
 
