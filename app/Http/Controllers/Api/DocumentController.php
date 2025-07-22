@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Data\DTO\CreateDocumentDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Document\MarkReadRequest;
 use App\Http\Requests\Api\Document\ShowRequest;
 use App\Http\Requests\Api\Document\StoreRequest;
 use App\Models\Document;
 use App\Services\DocumentService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DocumentController extends Controller
@@ -72,6 +72,7 @@ class DocumentController extends Controller
         try {
             $document = Document::where('uuid', $request->route('document'))->first();
             $documentData = $this->documentService->show($document, Auth::user());
+
             return response()->json([
                 'document' => $documentData,
             ]);
@@ -81,26 +82,23 @@ class DocumentController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Mark document as read
+     *
+     * @param MarkReadRequest $request
+     * @return JsonResponse
      */
-    public function edit(string $id)
+    public function markAsRead(MarkReadRequest $request): JsonResponse
     {
-        // TODO
-    }
+        try {
+            $document = Document::where('uuid', $request->route('document'))->first();
+            $documentRead = $this->documentService->markRead($document, Auth::user());
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        // TODO
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        // TODO
+            return response()->json([
+                'message' => __('api.document.read.success', ['name' => $document->getAttribute('name')]),
+                'date' => $documentRead->created_at->format('Y-m-d'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
     }
 }

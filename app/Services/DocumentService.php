@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Data\DTO\CreateDocumentDTO;
 use App\Models\Document;
+use App\Models\DocumentRead;
 use App\Models\User;
 use App\Services\Transformers\IndexDocumentsDataTransformer;
 use App\Services\Transformers\ShowDocumentDataTransformer;
@@ -60,6 +61,20 @@ class DocumentService
     public function show(Document $document, User $user): array
     {
         return ShowDocumentDataTransformer::transform($document, $user);
+    }
+
+    /**
+     * @param Document $document
+     * @param User $user
+     * @return DocumentRead
+     */
+    public function markRead(Document $document, User $user): DocumentRead
+    {
+        return DocumentRead::firstOrCreate([
+            'document_id' => $document->getKey(),
+            'user_id' => $user->getKey(),
+            'confirmed' => true
+        ]);
     }
 
     /**

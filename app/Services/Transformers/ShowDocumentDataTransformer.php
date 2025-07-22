@@ -14,6 +14,8 @@ class ShowDocumentDataTransformer extends IndexDocumentsDataTransformer
      */
     public static function transform(Document $document, User $user): array
     {
+        $read = $document->reads()->where('user_id', $user->getKey())->first();
+
         return [
             "id" => $document->getAttribute('uuid'),
             "name" => $document->getAttribute('name'),
@@ -26,6 +28,8 @@ class ShowDocumentDataTransformer extends IndexDocumentsDataTransformer
             "dateTag" => $document->getAttribute('date_from')->format('Y-m-d'),
             "dateFrom" => $document->getAttribute('date_from')->format('Y-m-d'),
             "dateTo" => $document->getAttribute('date_to')?->format('Y-m-d') ?? '',
+            "isRead" => $read !== null,
+            "readDate" => $read?->getAttribute('created_at')?->format('Y-m-d'),
             "fileUrl" => route('getFile', ['document' => $document->getAttribute('uuid')]),
         ];
     }
