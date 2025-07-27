@@ -3,6 +3,7 @@
 use App\Data\DTO\UserDTO;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\DocumentsHistoryController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\ManageDocumentController;
@@ -20,6 +21,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         );
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/documents/history', [DocumentsHistoryController::class, 'data']);
     Route::resource('documents', DocumentController::class);
     Route::post('document-reads/{document}', [DocumentController::class, 'markAsRead']);
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\DocumentRead\HasRelations;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class DocumentRead extends Model
 {
+    use HasRelations;
+
     /**
      * The attributes that are mass assignable.
      *
