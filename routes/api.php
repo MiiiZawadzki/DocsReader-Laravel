@@ -38,4 +38,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/settings/user/password', [SettingsController::class, 'updatePassword']);
 
     Route::get('/home', [HomeController::class, 'data']);
-});
+
+    Route::prefix('statistics')->name('statistics')->group(function () {
+        Route::prefix('user')->name('user')->group(function () {
+            Route::get('/charts', [\App\Http\Controllers\Api\UserStatisticsController::class, 'charts']);
+            Route::get('/read', [\App\Http\Controllers\Api\UserStatisticsController::class, 'readStatistics']);
+        });
+    });});

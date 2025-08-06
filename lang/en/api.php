@@ -37,4 +37,12 @@ return [
             'success' => 'User data updated successfully',
         ],
     ],
+    'statistics' => [
+        'user' => [
+            'read' => [
+                'name' => 'Document Familiarization Chart',
+                'description' => 'The diagram illustrates the proportion of documents you have read (Read) compared to those you have not yet reviewed (Not read).',
+            ]
+        ]
+    ]
 ];
