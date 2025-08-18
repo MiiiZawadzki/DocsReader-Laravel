@@ -41,7 +41,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::prefix('statistics')->name('statistics')->group(function () {
         Route::prefix('user')->name('user')->group(function () {
+            Route::get('/stats', [\App\Http\Controllers\Api\UserStatisticsController::class, 'stats']);
+            Route::get('/documents/active', [\App\Http\Controllers\Api\UserStatisticsController::class, 'activeDocuments']);
+            Route::get('/documents/total', [\App\Http\Controllers\Api\UserStatisticsController::class, 'totalDocuments']);
+            Route::get('/documents/read', [\App\Http\Controllers\Api\UserStatisticsController::class, 'readDocuments']);
+
+
             Route::get('/charts', [\App\Http\Controllers\Api\UserStatisticsController::class, 'charts']);
             Route::get('/read', [\App\Http\Controllers\Api\UserStatisticsController::class, 'readStatistics']);
+        });
+        Route::prefix('manage')->name('manage')->group(function () {
+            Route::get('/stats', [\App\Http\Controllers\Api\ManageStatisticsController::class, 'stats']);
+            Route::get('/documents/active', [\App\Http\Controllers\Api\ManageStatisticsController::class, 'activeDocuments']);
+            Route::get('/documents/total', [\App\Http\Controllers\Api\ManageStatisticsController::class, 'totalDocuments']);
+
+            Route::get('/charts', [\App\Http\Controllers\Api\ManageStatisticsController::class, 'charts']);
+            Route::get('/read', [\App\Http\Controllers\Api\ManageStatisticsController::class, 'readStatistics']);
         });
     });});

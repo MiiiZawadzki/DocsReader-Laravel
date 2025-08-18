@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\UserStatisticsService;
+use App\Services\ManageStatisticsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
-class UserStatisticsController extends Controller
+class ManageStatisticsController extends Controller
 {
-    public function __construct(private readonly UserStatisticsService $service)
+    public function __construct(private readonly ManageStatisticsService $service)
     {
     }
 
@@ -22,19 +22,14 @@ class UserStatisticsController extends Controller
         try {
             return response()->json([
                 [
-                    'name' => __('api.statistics.user.active.name'),
+                    'name' => __('api.statistics.manage.active.name'),
                     'description' => __('api.statistics.manage.active.description'),
-                    'url' => '/api/statistics/user/documents/active',
+                    'url' => '/api/statistics/manage/documents/active',
                 ],
                 [
-                    'name' => __('api.statistics.user.total.name'),
+                    'name' => __('api.statistics.manage.total.name'),
                     'description' => __('api.statistics.manage.total.description'),
-                    'url' => '/api/statistics/user/documents/total',
-                ],
-                [
-                    'name' => __('api.statistics.user.read.name'),
-                    'description' => __('api.statistics.user.read.description'),
-                    'url' => '/api/statistics/user/documents/read',
+                    'url' => '/api/statistics/manage/documents/total',
                 ],
             ]);
         } catch (\Exception $e) {
@@ -50,9 +45,9 @@ class UserStatisticsController extends Controller
         try {
             return response()->json([
                 [
-                    'name' => __('api.statistics.user.read.name'),
-                    'description' => __('api.charts.user.read.description'),
-                    'url' => '/api/statistics/user/read',
+                    'name' => __('api.charts.manage.read.name'),
+                    'description' => __('api.charts.manage.read.description'),
+                    'url' => '/api/statistics/manage/read',
                 ],
             ]);
         } catch (\Exception $e) {
@@ -96,20 +91,6 @@ class UserStatisticsController extends Controller
         try {
             return response()->json([
                 'value' => $this->service->totalDocuments(Auth::user()),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * @return JsonResponse
-     */
-    public function readDocuments(): JsonResponse
-    {
-        try {
-            return response()->json([
-                'value' => $this->service->readDocuments(Auth::user()),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
