@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Data\DTO\UpdateDocumentDTO;
+use App\Http\Controllers\Api\ManageDocumentController\Statistics;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Document\UpdateRequest;
 use App\Http\Requests\Api\ManageDocument\AssignUserRequest;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Auth;
 
 class ManageDocumentController extends Controller
 {
+    use Statistics;
+
     public function __construct(private readonly ManageDocumentService $documentService)
     {
     }

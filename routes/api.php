@@ -57,5 +57,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
             Route::get('/charts', [\App\Http\Controllers\Api\ManageStatisticsController::class, 'charts']);
             Route::get('/read', [\App\Http\Controllers\Api\ManageStatisticsController::class, 'readStatistics']);
+
+            Route::prefix('document/{document}')->name('manage')->group(function () {
+                Route::get('/stats', [\App\Http\Controllers\Api\ManageDocumentController::class, 'stats']);
+                Route::get('/assigned', [\App\Http\Controllers\Api\ManageDocumentController::class, 'documentAssignment']);
+                Route::get('/reads', [\App\Http\Controllers\Api\ManageDocumentController::class, 'documentReads']);
+                Route::get('/ratio', [\App\Http\Controllers\Api\ManageDocumentController::class, 'documentReadRatio']);
+
+                Route::get('/charts', [\App\Http\Controllers\Api\ManageDocumentController::class, 'charts']);
+                Route::get('/read', [\App\Http\Controllers\Api\ManageDocumentController::class, 'readStatistics']);
+            });
         });
     });});

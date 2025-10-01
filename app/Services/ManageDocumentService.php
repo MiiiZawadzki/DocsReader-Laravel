@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Data\DTO\UpdateDocumentDTO;
 use App\Models\Document;
+use App\Models\DocumentRead;
 use App\Models\User;
 use App\Models\UserDocument;
 use App\Services\Transformers\IndexDocumentsDataTransformer;
@@ -119,5 +120,66 @@ class ManageDocumentService
     private function updateFile(UploadedFile $file, string $uuid): string
     {
         return $file->store("uploads/$uuid", 'documents');
+    }
+
+    /**
+     * @param Document $document
+     * @return array[]
+     */
+    public function readStatistics(Document $document): array
+    {
+        $totalAssigned = $this->documentAssignment($document);
+        $totalRead = $this->documentReads($document);
+        $totalNotRead = $totalAssigned - $totalRead;
+
+        $readPercentage = round(
+            ($totalRead / max($totalAssigned, 1)) * 100,
+            2
+        );
+        $notReadPercentage = round(($totalNotRead / max($totalAssigned, 1)) * 100, 2);
+
+        return [
+            [
+                'value' => $totalRead,
+                'name' => "Read ($readPercentage %)"
+            ],
+            [
+                'value' => $totalNotRead,
+                'name' => "Not read ($notReadPercentage %)"
+            ],
+        ];
+    }
+
+    /**
+     * @param Document $document
+     * @return int
+     */
+    public function documentReads(Document $document): int
+    {
+        return DocumentRead::where('document_id', $document->getKey())->count();
+    }
+
+    /**
+     * @param Document $document
+     * @return int
+     */
+    public function documentAssignment(Document $document): int
+    {
+        return UserDocument::where('document_id', $document->getKey())->count();
+    }
+
+    /**
+     * @param Document $document
+     * @return float
+     */
+    public function documentReadRatio(Document $document): float
+    {
+        $totalAssigned = $this->documentAssignment($document);
+        $totalRead = $this->documentReads($document);
+
+        return round(
+            ($totalRead / max($totalAssigned, 1)),
+            2
+        );
     }
 }

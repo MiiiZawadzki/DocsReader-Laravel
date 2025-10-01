@@ -49,6 +49,12 @@ return [
                 'name' => 'Document Familiarization Ratio Chart',
                 'description' => 'This diagram shows the proportion of documents read by assigned users compared to those that remain unreviewed.',
             ],
+        ],
+        'document' => [
+            'read' => [
+                'name' => 'Document Familiarization Ratio Chart',
+                'description' => 'This diagram shows the proportion of users who have read the document compared to those who have not reviewed it yet.',
+            ],
         ]
     ],
     'statistics' => [
@@ -75,6 +81,20 @@ return [
                 'name' => 'Total Documents',
                 'description' => 'Total number of Documents created by You in the system.',
             ],
-        ]
+        ],
+        'document' => [
+            'assigned' => [
+                'name' => 'Users assigned',
+                'description' => 'Total number of users assigned to the Document.',
+            ],
+            'reads' => [
+                'name' => 'Reads',
+                'description' => 'Total number of assigned users that read the Document.',
+            ],
+            'ratio' => [
+                'name' => 'Ratio',
+                'description' => 'Ratio of users that read the Document.',
+            ],
+        ],
     ]
 ];
