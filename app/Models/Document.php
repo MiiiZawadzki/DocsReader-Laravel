@@ -5,13 +5,14 @@ namespace App\Models;
 use App\Models\Document\HasRelations;
 use App\Models\Document\HasScopes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @mixin IdeHelperDocument
  */
 class Document extends Model
 {
-    use HasRelations, HasScopes;
+    use HasRelations, HasScopes, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

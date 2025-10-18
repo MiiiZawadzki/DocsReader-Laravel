@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Data\DTO\UpdateDocumentDTO;
 use App\Http\Controllers\Api\ManageDocumentController\Statistics;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Document\DeleteRequest;
 use App\Http\Requests\Api\Document\UpdateRequest;
 use App\Http\Requests\Api\ManageDocument\AssignUserRequest;
 use App\Http\Requests\Api\ManageDocument\GetUsersRequest;
@@ -108,6 +109,24 @@ class ManageDocumentController extends Controller
 
             return response()->json([
                 'message' => __('api.document.manage.userAssignment.success')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Delete specified resource.
+     */
+    public function delete(DeleteRequest $request): JsonResponse
+    {
+        try {
+            $document = Document::where('uuid', $request->route('document'))->first();
+
+            $this->documentService->delete($document);
+
+            return response()->json([
+                'message' => __('api.document.manage.delete.success')
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

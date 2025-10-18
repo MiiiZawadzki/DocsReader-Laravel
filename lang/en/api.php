@@ -24,7 +24,10 @@ return [
         'manage' => [
             'userAssignment' => [
                 'success' => 'User assignment successful',
-            ]
+            ],
+            'delete' => [
+                'success' => 'Document was successfully deleted',
+            ],
         ],
         'statuses' => [
             'new' => 'New',

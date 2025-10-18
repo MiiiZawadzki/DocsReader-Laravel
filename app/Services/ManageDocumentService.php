@@ -63,6 +63,15 @@ class ManageDocumentService
 
     /**
      * @param Document $document
+     * @return bool
+     */
+    public function delete(Document $document): bool
+    {
+        return $document->delete();
+    }
+
+    /**
+     * @param Document $document
      * @param User $user
      * @return array
      */

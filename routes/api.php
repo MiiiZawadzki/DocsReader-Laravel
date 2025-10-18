@@ -27,6 +27,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/manage/documents', [ManageDocumentController::class, 'index']);
     Route::get('/manage/documents/{document}', [ManageDocumentController::class, 'show']);
+    Route::delete('/manage/documents/{document}/delete', [ManageDocumentController::class, 'delete']);
     Route::get('/manage/documents/{document}/users', [ManageDocumentController::class, 'users']);
     Route::put('/manage/documents/{document}/users/{user}', [ManageDocumentController::class, 'userAssignment']);
     Route::post('/manage/documents/{document}', [ManageDocumentController::class, 'update']);
