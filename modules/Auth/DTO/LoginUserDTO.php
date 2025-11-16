@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Data\DTO\Auth;
+namespace Modules\Auth\DTO;
 
 final readonly class LoginUserDTO
 {

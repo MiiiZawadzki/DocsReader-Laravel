@@ -1,18 +1,18 @@
 <?php
 
-namespace Tests\Unit\Http\Controllers\Api;
+namespace Modules\Auth\Tests\Unit\Http\Controllers\Api;
 
-use App\Data\DTO\Auth\LoginUserDTO;
-use App\Data\DTO\Auth\RegisterDataDTO;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Requests\Api\LoginRequest;
-use App\Http\Requests\Api\RegisterRequest;
 use App\Models\User;
-use App\Services\AuthService;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
 use Illuminate\Translation\Translator;
 use Mockery;
+use Modules\Auth\DTO\LoginUserDTO;
+use Modules\Auth\DTO\RegisterDataDTO;
+use Modules\Auth\Http\Controllers\AuthController;
+use Modules\Auth\Http\Requests\LoginRequest;
+use Modules\Auth\Http\Requests\RegisterRequest;
+use Modules\Auth\Services\AuthService;
 use Tests\TestCase;
 
 
@@ -40,7 +40,7 @@ class AuthControllerTest extends TestCase
         $sessionMock->shouldReceive('regenerate');
 
         $translatorMock->shouldReceive('get')
-            ->withArgs(['auth.register_success']);
+            ->withArgs(['auth::messages.register_success']);
 
         $authService->shouldReceive('register')
             ->once()
@@ -133,7 +133,7 @@ class AuthControllerTest extends TestCase
             ->andReturn('john.doe@example.com');
 
         $translatorMock->shouldReceive('get')
-            ->withArgs(['auth.failed'])
+            ->withArgs(['auth::messages.failed'])
             ->andReturn('auth failed')
             ->once();
 
@@ -178,7 +178,7 @@ class AuthControllerTest extends TestCase
             ->andReturn($user);
 
         $translatorMock->shouldReceive('get')
-            ->withArgs(['auth.logout_success'])
+            ->withArgs(['auth::messages.logout_success'])
             ->andReturn('auth logout success')
             ->once();
 

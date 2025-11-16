@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Services;
+namespace Modules\Auth\Services;
 
-use App\Data\DTO\Auth\CreateUserDTO;
-use App\Data\DTO\Auth\LoginUserDTO;
-use App\Data\DTO\Auth\RegisterDataDTO;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Modules\Auth\DTO\LoginUserDTO;
+use Modules\Auth\DTO\RegisterDataDTO;
 
 class AuthService
 {
-    public function __construct(private UserRepositoryInterface $userRepository)
+    public function __construct(private readonly UserRepositoryInterface $userRepository)
     {
     }
 
@@ -25,12 +24,11 @@ class AuthService
         $hashedPassword = $this->generateHashedPassword($userData->plainTextPassword);
 
         return $this->userRepository->create(
-            new CreateUserDTO([
-                    'name' => $userData->name,
-                    'email' => $userData->email,
-                    'password' => $hashedPassword
-                ]
-            )
+            [
+                'name' => $userData->name,
+                'email' => $userData->email,
+                'password' => $hashedPassword
+            ]
         );
     }
 

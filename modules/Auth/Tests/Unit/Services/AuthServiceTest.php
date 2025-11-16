@@ -1,15 +1,14 @@
 <?php
 
-namespace Tests\Unit\Services;
+namespace Modules\Auth\Tests\Unit\Services;
 
-use App\Data\DTO\Auth\CreateUserDTO;
-use App\Data\DTO\Auth\LoginUserDTO;
-use App\Data\DTO\Auth\RegisterDataDTO;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Modules\Auth\DTO\LoginUserDTO;
+use Modules\Auth\DTO\RegisterDataDTO;
+use Modules\Auth\Services\AuthService;
 use Tests\TestCase;
 
 class AuthServiceTest extends TestCase
@@ -38,12 +37,11 @@ class AuthServiceTest extends TestCase
         $userRepository
             ->expects($this->once())
             ->method('create')
-            ->with($this->callback(function (CreateUserDTO $argument) use ($registerDto, $hashedPassword) {
-                $payload = $argument->toArray();
+            ->with($this->callback(function (array $dataArray) use ($registerDto, $hashedPassword) {
 
-                $this->assertSame($registerDto->name, $payload['name']);
-                $this->assertSame($registerDto->email, $payload['email']);
-                $this->assertSame($hashedPassword, $payload['password']);
+                $this->assertSame($registerDto->name, $dataArray['name']);
+                $this->assertSame($registerDto->email, $dataArray['email']);
+                $this->assertSame($hashedPassword, $dataArray['password']);
 
                 return true;
             }))

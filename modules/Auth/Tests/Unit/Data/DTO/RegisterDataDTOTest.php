@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Unit\Data\DTO;
+namespace Modules\Auth\Tests\Unit\Data\DTO;
 
-use App\Data\DTO\Auth\RegisterDataDTO;
+use Modules\Auth\DTO\RegisterDataDTO;
 use PHPUnit\Framework\TestCase;
 
 class RegisterDataDTOTest extends TestCase

@@ -1,26 +1,29 @@
 <?php
 
-namespace App\Data\DTO\Auth;
+namespace Modules\Auth\DTO;
 
-final readonly class CreateUserDTO
+final readonly class RegisterDataDTO
 {
     public string $name;
     public string $email;
-    public string $hashedPassword;
+    public string $plainTextPassword;
 
     public function __construct(array $userData)
     {
         $this->name = $userData['name'];
         $this->email = $userData['email'];
-        $this->hashedPassword = $userData['password'];
+        $this->plainTextPassword = $userData['password'];
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
         return [
             'name' => $this->name,
             'email' => $this->email,
-            'password' => $this->hashedPassword,
+            'password' => $this->plainTextPassword,
         ];
     }
 }

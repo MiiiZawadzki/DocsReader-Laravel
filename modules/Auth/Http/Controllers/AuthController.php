@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace Modules\Auth\Http\Controllers;
 
-use App\Data\DTO\Auth\LoginUserDTO;
-use App\Data\DTO\Auth\RegisterDataDTO;
 use App\Data\DTO\UserDTO;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\LoginRequest;
-use App\Http\Requests\Api\RegisterRequest;
-use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Translation\Translator;
+use Modules\Auth\DTO\LoginUserDTO;
+use Modules\Auth\DTO\RegisterDataDTO;
+use Modules\Auth\Http\Requests\LoginRequest;
+use Modules\Auth\Http\Requests\RegisterRequest;
+use Modules\Auth\Services\AuthService;
 
-class AuthController extends Controller
+class AuthController
 {
     public function __construct(
         public readonly AuthService $service,
@@ -37,7 +36,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return new JsonResponse(
-            ['message' => $this->translator->get('auth.register_success')],
+            ['message' => $this->translator->get('auth::messages.register_success')],
             201
         );
     }
@@ -55,7 +54,7 @@ class AuthController extends Controller
 
         if (!$user) {
             return new JsonResponse(
-                ['message' => $this->translator->get('auth.failed')],
+                ['message' => $this->translator->get('auth::messages.failed')],
                 401
             );
         }
@@ -76,7 +75,7 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return new JsonResponse(
-            ['message' =>  $this->translator->get('auth.logout_success')],
+            ['message' =>  $this->translator->get('auth::messages.logout_success')],
             200
         );
     }
