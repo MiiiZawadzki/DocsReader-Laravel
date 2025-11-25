@@ -2,16 +2,16 @@
 
 namespace Modules\Auth\Services;
 
-use App\Models\User;
-use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
+use Modules\User\Api\UserApiInterface;
+use Modules\User\Models\User;
 
 class AuthService
 {
-    public function __construct(private readonly UserRepositoryInterface $userRepository)
+    public function __construct(private UserApiInterface $userApi)
     {
     }
 
@@ -23,7 +23,7 @@ class AuthService
     {
         $hashedPassword = $this->generateHashedPassword($userData->plainTextPassword);
 
-        return $this->userRepository->create(
+        return $this->userApi->createUser(
             [
                 'name' => $userData->name,
                 'email' => $userData->email,

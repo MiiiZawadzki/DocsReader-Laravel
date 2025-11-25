@@ -2,21 +2,26 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Data\DTO\UserDTO;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Translation\Translator;
+use Modules\Access\Api\AccessApiInterface;
+use Modules\Auth\DTO\LoginResponseDTO;
 use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
 use Modules\Auth\Http\Requests\LoginRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\Auth\Services\AuthService;
+use Modules\User\Api\UserApi;
+use Modules\User\Api\UserApiInterface;
 
 class AuthController
 {
     public function __construct(
         public readonly AuthService $service,
         public readonly Translator $translator,
+        public readonly UserApiInterface $userApi,
+        public readonly AccessApiInterface $accessApi,
     )
     {
     }
@@ -62,7 +67,11 @@ class AuthController
         $request->session()->regenerate();
 
         return new JsonResponse(
-            ['user' => new UserDTO($user)],
+            ['user' => new LoginResponseDTO(
+                $user->getAttribute('name'),
+                $user->getAttribute('email'),
+                $this->accessApi->getPermissionsForUser($user->getKey()),
+            )],
             200
         );
     }

@@ -2,6 +2,11 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    App\Providers\RepositoryServiceProvider::class,
-    \Modules\Auth\Providers\AuthServiceProvider::class
+    \Modules\Auth\Providers\AuthServiceProvider::class,
+    \Modules\Access\Providers\AccessServiceProvider::class,
+    \Modules\User\Providers\UserServiceProvider::class,
+    \Modules\Dashboard\Providers\DashboardServiceProvider::class,
+    \Modules\Document\Providers\DocumentServiceProvider::class,
+    \Modules\History\Providers\HistoryServiceProvider::class,
+    \Modules\Analytics\Providers\AnalyticsServiceProvider::class,
 ];
