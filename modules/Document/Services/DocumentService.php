@@ -2,30 +2,44 @@
 
 namespace Modules\Document\Services;
 
-use App\Data\DTO\CreateDocumentDTO;
-use App\Models\Document;
-use App\Models\DocumentRead;
-use App\Services\Transformers\IndexDocumentsDataTransformer;
-use App\Services\Transformers\ShowDocumentDataTransformer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Modules\Document\DTO\CreateDocumentDTO;
+use Modules\Document\Models\Document;
+use Modules\Document\Repositories\Contracts\DocumentRepositoryInterface;
 
 class DocumentService
 {
+    public function __construct(private readonly DocumentRepositoryInterface $repository)
+    {
+    }
+
     /**
+     * @param int $userId
      * @return Collection
      */
-    public function get(): Collection
+    public function getForUser(int $userId): Collection
     {
-        // TODO:- Use repository
-        return collect([]);
-//        return Document::with(['user', 'reads'])
-//            ->forUser($user)
-//            ->get()
-//            ->map(
-//                fn(Document $document) => IndexDocumentsDataTransformer::transform($document, $user)
-//            );
+        return $this->repository->getForUser($userId);
+    }
+
+    /**
+     * @param int $userId
+     * @return Collection
+     */
+    public function getForManager(int $userId): Collection
+    {
+        return $this->repository->getForManager($userId);
+    }
+
+    /**
+     * @param string $documentUuId
+     * @return Document
+     */
+    public function getDocumentByUuid(string $documentUuId): Document
+    {
+        return $this->repository->getByUuid($documentUuId);
     }
 
     /**
@@ -36,44 +50,20 @@ class DocumentService
     {
         $uuid = Str::uuid();
         $file = $dto->getFile();
-        $dataArray = $dto->getFormData();
+        $dataArray = $dto->getData();
         $path = $this->saveFile($file, $uuid);
 
-        return Document::create([
+        return $this->repository->create([
             'uuid' => $uuid,
             'name' => $dataArray['title'],
             'source_name' => $file->getClientOriginalName(),
             'description' => $dataArray['description'],
-            'user_id' => $dto->user->getKey(),
+            'user_id' => $dataArray['user_id'],
             'file_path' => "/{$path}",
             'date_from' => $dataArray['date_from'],
             'date_to' => $dataArray['date_to'],
             'declaration_message' => $dataArray['declaration'],
             'delay' => $dataArray['delay'],
-        ]);
-    }
-
-    /**
-     * @param Document $document
-     * @param User $user
-     * @return array
-     */
-    public function show(Document $document, User $user): array
-    {
-        return ShowDocumentDataTransformer::transform($document, $user);
-    }
-
-    /**
-     * @param Document $document
-     * @param User $user
-     * @return DocumentRead
-     */
-    public function markRead(Document $document, User $user): DocumentRead
-    {
-        return DocumentRead::firstOrCreate([
-            'document_id' => $document->getKey(),
-            'user_id' => $user->getKey(),
-            'confirmed' => true
         ]);
     }
 

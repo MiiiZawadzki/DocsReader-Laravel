@@ -2,19 +2,15 @@
 
 namespace Modules\Document\DTO;
 
-use App\Models\User;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Auth;
 use Modules\Document\Http\Requests\UpdateRequest;
 use Modules\Document\Models\Document;
 
-class UpdateDocumentDTO
+readonly class UpdateDocumentDTO
 {
-//    public User $user;
 
-    public function __construct(private readonly string $uuid, private readonly UpdateRequest $request)
+    public function __construct(private string $uuid, private UpdateRequest $request)
     {
-//        $this->user = Auth::user();
     }
 
     public function getFile(): ?UploadedFile

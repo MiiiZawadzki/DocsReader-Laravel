@@ -2,18 +2,17 @@
 
 namespace Modules\Document\DTO;
 
-use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Modules\Document\Http\Requests\StoreRequest;
 
 class CreateDocumentDTO
 {
-//    public User $user;
+    private int $userId;
 
     public function __construct(private readonly StoreRequest $request)
     {
-//        $this->user = Auth::user();
+        $this->userId = Auth::id();
     }
 
     public function getFile(): UploadedFile
@@ -32,5 +31,18 @@ class CreateDocumentDTO
             'date_to',
             'file',
         ]);
+    }
+
+    public function getUserId(): int
+    {
+        return $this->userId;
+    }
+
+    public function getData(): array
+    {
+        $data = $this->getFormData();
+        $data['user_id'] = $this->userId;
+
+        return $data;
     }
 }

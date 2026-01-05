@@ -28,7 +28,6 @@ class SyncPermissions extends Command
     public function handle(): int
     {
         $permissions = config('permissions');
-        dump($permissions);
         $existingPermissions = Permission::pluck('type')->toArray();
 
         $this->removePermissions($existingPermissions, $permissions);

@@ -4,16 +4,24 @@ namespace Modules\User\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
-use Modules\User\Models\User;
+use Modules\User\Repositories\Contracts\UserRepositoryInterface;
 
 class SettingsService
 {
+    public function __construct(
+        private readonly UserRepositoryInterface $userRepository
+    )
+    {
+    }
+
     /**
-     * @param User $user
+     * @param int $userId
      * @return Collection
      */
-    public function data(User $user): Collection
+    public function data(int $userId): Collection
     {
+        $user = $this->userRepository->findById($userId);
+
         return collect([
             'name' => $user->name,
             'email' => $user->email,
@@ -22,35 +30,32 @@ class SettingsService
     }
 
     /**
-     * @param User $user
+     * @param int $userId
      * @param string $name
      * @return bool
      */
-    public function updateName(User $user, string $name): bool
+    public function updateName(int $userId, string $name): bool
     {
-        $user->name = $name;
-        return $user->save();
+        return $this->userRepository->updateName($userId, $name);
     }
 
     /**
-     * @param User $user
+     * @param int $userId
      * @param string $email
      * @return bool
      */
-    public function updateEmail(User $user, string $email): bool
+    public function updateEmail(int $userId, string $email): bool
     {
-        $user->email = $email;
-        return $user->save();
+        return $this->userRepository->updateEmail($userId, $email);
     }
 
     /**
-     * @param User $user
+     * @param int $userId
      * @param string $password
      * @return bool
      */
-    public function updatePassword(User $user, string $password): bool
+    public function updatePassword(int $userId, string $password): bool
     {
-        $user->password = Hash::make($password);
-        return $user->save();
+        return $this->userRepository->updatePassword($userId, Hash::make($password));
     }
 }

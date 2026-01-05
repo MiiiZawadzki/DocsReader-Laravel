@@ -2,22 +2,11 @@
 
 namespace Modules\User\Http\Requests\Settings;
 
-use App\Rules\MatchCurrentPassword;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
+use Modules\User\Rules\MatchCurrentPassword;
 
-class UpdatePasswordRequest extends FormRequest
+class UpdatePasswordRequest extends SettingsRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return Auth::check();
-    }
-
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -30,7 +19,7 @@ class UpdatePasswordRequest extends FormRequest
             'password_verification' => [
                 'required',
                 'string',
-                new MatchCurrentPassword(Auth::user()),
+                new MatchCurrentPassword($this->currentPassword),
             ]
         ];
     }

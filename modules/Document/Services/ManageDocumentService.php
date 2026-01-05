@@ -2,28 +2,30 @@
 
 namespace Modules\Document\Services;
 
-use App\Services\Transformers\IndexDocumentsDataTransformer;
-use App\Services\Transformers\ManageDocument\ShowDocumentDataTransformer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Modules\Document\DTO\UpdateDocumentDTO;
 use Modules\Document\Models\Document;
+use Modules\Document\Repositories\Contracts\DocumentRepositoryInterface;
+use Modules\Document\Repositories\Contracts\UserDocumentRepositoryInterface;
 
 class ManageDocumentService
 {
+    public function __construct(
+        private readonly DocumentRepositoryInterface $repository,
+        private readonly UserDocumentRepositoryInterface $userDocumentRepository
+    )
+    {
+    }
+
     /**
+     * @param int $userId
      * @return Collection
      */
-    public function get(): Collection
+    public function getForManager(int $userId): Collection
     {
-        return collect([]);
-//        return Document::with(['user', 'reads'])
-//            ->forManager($user)
-//            ->get()
-//            ->map(
-//                fn(Document $document) => IndexDocumentsDataTransformer::transform($document, $user)
-//            );
+        return $this->repository->getForManager($userId);
     }
 
     /**
@@ -32,89 +34,55 @@ class ManageDocumentService
      */
     public function update(UpdateDocumentDTO $dto): Document
     {
-        return $dto->getModel();
-//        $file = $dto->getFile();
-//        $dataArray = $dto->getFormData();
-//        $document = $dto->getModel();
-//
-//        $document->update([
-//            'name' => $dataArray['title'],
-//            'description' => $dataArray['description'],
-//            'date_from' => $dataArray['date_from'],
-//            'date_to' => $dataArray['date_to'],
-//            'declaration_message' => $dataArray['declaration'],
-//            'delay' => $dataArray['delay'],
-//        ]);
-//
-//        if ($file) {
-//            $path = $this->updateFile($file, $dataArray['uuid']);
-//            Storage::disk('documents')->delete($document->file_path);
-//            $document->update([
-//                'source_name' => $file->getClientOriginalName(),
-//                'file_path' => "/{$path}",
-//            ]);
-//        }
-//
-//        $document->save();
-//        return $document;
+        $document = $dto->getModel();
+        $file = $dto->getFile();
+        $formData = $dto->getFormData();
+
+        $updateData = [
+            'name' => $formData['title'],
+            'description' => $formData['description'],
+            'date_from' => $formData['date_from'],
+            'date_to' => $formData['date_to'],
+            'declaration_message' => $formData['declaration'],
+            'delay' => $formData['delay'],
+        ];
+
+        if ($file) {
+            $path = $this->updateFile($file, $formData['uuid']);
+            $oldFilePath = $document->file_path;
+
+            $updateData['source_name'] = $file->getClientOriginalName();
+            $updateData['file_path'] = "/$path";
+
+            if ($oldFilePath) {
+                Storage::disk('documents')->delete($oldFilePath);
+            }
+        }
+
+        return $this->repository->update($document, $updateData);
     }
 
     /**
      * @param Document $document
-     * @return bool
+     * @param int $userId
+     * @param bool $assign
+     * @param int $changedById
+     * @return void
      */
-    public function delete(Document $document): bool
+    public function assignUser(Document $document, int $userId, bool $assign, int $changedById): void
     {
-        return true;
-//        return $document->delete();
-    }
-
-    /**
-     * @param Document $document
-     * @param User $user
-     * @return array
-     */
-    public function show(Document $document, User $user): array
-    {
-        return [];
-//        return ShowDocumentDataTransformer::transform($document, $user);
-    }
-
-    /**
-     * @param Document $document
-     * @return array
-     */
-    public function documentUsers(Document $document): array
-    {
-        return [];
-//        return User::with(['userDocuments'])
-//            ->get()
-//            ->map(fn(User $user) => [
-//                'id' => $user->getKey(),
-//                'name' => $user->name,
-//                'assign' => $user->userDocuments->contains('document_id', $document->getKey())
-//            ])
-//            ->toArray();
-    }
-
-    /**
-     */
-    public function assignUser(): void
-    {
-//        if ($assign) {
-//            UserDocument::firstOrCreate(
-//                [
-//                    'user_id' => $user->getKey(),
-//                    'document_id' => $document->getKey(),
-//                ],
-//                ['created_by' => $changedBy->getKey()]
-//            );
-//        } else {
-//            UserDocument::where([
-//                'user_id' => $user->getKey(),
-//                'document_id' => $document->getKey(),
-//            ])->delete();
-//        }
+        if ($assign) {
+            $this->userDocumentRepository->assignUser(
+                $document->getKey(),
+                $userId,
+                $changedById
+            );
+        } else {
+            $this->userDocumentRepository->unassignUser(
+                $document->getKey(),
+                $userId
+            );
+        }
     }
 
     /**
@@ -124,7 +92,6 @@ class ManageDocumentService
      */
     private function updateFile(UploadedFile $file, string $uuid): string
     {
-        return '';
-//        return $file->store("uploads/$uuid", 'documents');
+        return $file->store("uploads/$uuid", 'documents');
     }
 }

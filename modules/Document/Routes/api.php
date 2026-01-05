@@ -7,7 +7,6 @@ use Modules\Document\Http\Controllers\ManageDocumentController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('documents', DocumentController::class);
-    Route::post('document-reads/{document}', [DocumentController::class, 'markAsRead']);
 
     Route::get('/manage/documents', [ManageDocumentController::class, 'index']);
     Route::get('/manage/documents/{document}', [ManageDocumentController::class, 'show']);

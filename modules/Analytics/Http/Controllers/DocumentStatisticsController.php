@@ -5,11 +5,14 @@ namespace Modules\Analytics\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Analytics\Services\DocumentStatisticsService;
-
+use Modules\Document\Api\DocumentApiInterface;
 
 class DocumentStatisticsController
 {
-    public function __construct(private readonly DocumentStatisticsService $service)
+    public function __construct(
+        private readonly DocumentStatisticsService $service,
+        private readonly DocumentApiInterface $documentApi
+    )
     {
     }
 
@@ -24,18 +27,18 @@ class DocumentStatisticsController
 
             return response()->json([
                 [
-                    'name' => __('api.statistics.document.assigned.name'),
-                    'description' => __('api.statistics.document.assigned.description'),
+                    'name' => __('analytics::messages.statistics.document.assigned.name'),
+                    'description' => __('analytics::messages.statistics.document.assigned.description'),
                     'url' => "/api/statistics/manage/document/$documentId/assigned",
                 ],
                 [
-                    'name' => __('api.statistics.document.reads.name'),
-                    'description' => __('api.statistics.document.reads.description'),
+                    'name' => __('analytics::messages.statistics.document.reads.name'),
+                    'description' => __('analytics::messages.statistics.document.reads.description'),
                     'url' => "/api/statistics/manage/document/$documentId/reads",
                 ],
                 [
-                    'name' => __('api.statistics.document.ratio.name'),
-                    'description' => __('api.statistics.document.ratio.description'),
+                    'name' => __('analytics::messages.statistics.document.ratio.name'),
+                    'description' => __('analytics::messages.statistics.document.ratio.description'),
                     'url' => "/api/statistics/manage/document/$documentId/ratio",
                     'isDecimal' => true
                 ],
@@ -56,8 +59,8 @@ class DocumentStatisticsController
         try {
             return response()->json([
                 [
-                    'name' => __('api.charts.document.read.name'),
-                    'description' => __('api.charts.document.read.description'),
+                    'name' => __('analytics::messages.charts.document.read.name'),
+                    'description' => __('analytics::messages.charts.document.read.description'),
                     'url' => "/api/statistics/manage/document/$documentId/read",
                 ],
             ]);
@@ -73,13 +76,11 @@ class DocumentStatisticsController
     public function readStatistics(Request $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
-//
-//            return response()->json([
-//                'chart_data' => $this->documentService->readStatistics($document),
-//            ]);
+            $documentUuid = $request->route('document');
+            $documentDto = $this->documentApi->getDocumentByUuid($documentUuid);
+
             return response()->json([
-                'chart_data' => $this->service->readStatistics(),
+                'chart_data' => $this->service->readStatistics($documentDto->id),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -93,10 +94,11 @@ class DocumentStatisticsController
     public function documentReads(Request $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
+            $documentUuid = $request->route('document');
+            $documentDto = $this->documentApi->getDocumentByUuid($documentUuid);
 
             return response()->json([
-                'value' => $this->service->documentReads(),
+                'value' => $this->service->documentReads($documentDto->id),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -110,10 +112,11 @@ class DocumentStatisticsController
     public function documentAssignment(Request $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
+            $documentUuid = $request->route('document');
+            $documentDto = $this->documentApi->getDocumentByUuid($documentUuid);
 
             return response()->json([
-                'value' => $this->service->documentAssignment(),
+                'value' => $this->service->documentAssignment($documentDto->id),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -127,10 +130,11 @@ class DocumentStatisticsController
     public function documentReadRatio(Request $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
+            $documentUuid = $request->route('document');
+            $documentDto = $this->documentApi->getDocumentByUuid($documentUuid);
 
             return response()->json([
-                'value' => $this->service->documentReadRatio(),
+                'value' => $this->service->documentReadRatio($documentDto->id),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

@@ -21,9 +21,10 @@ class SettingsController
     public function data(): JsonResponse
     {
         try {
-            $userData = $this->settingsService->data(Auth::user());
+            $userId = Auth::id();
+
             return response()->json([
-                'user' => $userData,
+                'user' => $this->settingsService->data($userId),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -37,9 +38,13 @@ class SettingsController
     public function updateName(UpdateNameRequest $request): JsonResponse
     {
         try {
-            $this->settingsService->updateName(Auth::user(), $request->get('name'));
+            $this->settingsService->updateName(
+                userId: Auth::id(),
+                name: $request->get('name')
+            );
+
             return response()->json([
-                'message' => __('api.settings.update.success'),
+                'message' => __('user::messages.settings.update.success'),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -53,10 +58,13 @@ class SettingsController
     public function updateEmail(UpdateEmailRequest $request): JsonResponse
     {
         try {
-            $this->settingsService->updateEmail(Auth::user(), $request->get('email'));
+            $this->settingsService->updateEmail(
+                userId: Auth::id(),
+                email: $request->get('email')
+            );
 
             return response()->json([
-                'message' => __('api.settings.update.success'),
+                'message' => __('user::messages.settings.update.success'),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -70,10 +78,13 @@ class SettingsController
     public function updatePassword(UpdatePasswordRequest $request): JsonResponse
     {
         try {
-            $this->settingsService->updatePassword(Auth::user(), $request->get('password'));
+            $this->settingsService->updatePassword(
+                userId: Auth::id(),
+                password: $request->get('password')
+            );
 
             return response()->json([
-                'message' => __('api.settings.update.success'),
+                'message' => __('user::messages.settings.update.success'),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

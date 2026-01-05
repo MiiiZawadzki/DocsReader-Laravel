@@ -1,10 +1,8 @@
 <?php
 
-namespace Modules\Document\Http\Requests;
+namespace Modules\History\Http\Requests;
 
-use App\Models\Document;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class MarkReadRequest extends FormRequest
 {
@@ -13,6 +11,7 @@ class MarkReadRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // TODO:- implement this logic
         return true;
 //        if (!Auth::check() || !$id = $this->route('document')) {
 //            return false;

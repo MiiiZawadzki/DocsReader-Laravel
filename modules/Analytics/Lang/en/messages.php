@@ -2,6 +2,8 @@
 
 return [
     'charts' => [
+        'read' => 'Read (:percentage %)',
+        'not_read' => 'Not read (:percentage %)',
         'user' => [
             'read' => [
                 'name' => 'Document Familiarization Chart',

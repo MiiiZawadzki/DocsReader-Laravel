@@ -2,6 +2,8 @@
 
 return [
     'charts' => [
+        'read' => 'Przeczytane (:percentage %)',
+        'not_read' => 'Nieprzeczytane (:percentage %)',
         'user' => [
             'read' => [
                 'name' => 'Wykres zapoznania z dokumentami',

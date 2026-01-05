@@ -3,38 +3,64 @@
 namespace Modules\History\Transformers;
 
 
+use Illuminate\Support\Collection;
+use Modules\Document\DTO\DocumentDTO;
 use Modules\History\Models\DocumentRead;
 
 class DocumentsHistoryDataTransformer
 {
     /**
-     * @param DocumentRead $documentRead
+     * @param DocumentDTO $documentDto
+     * @param Collection $readStatuses
+     * @param Collection $authorTags
      * @return array
      */
-    public static function transform(DocumentRead $documentRead): array
+    public static function transform(DocumentDTO $documentDto, Collection $readStatuses, Collection $authorTags): array
     {
-        $document = $documentRead->document;
         return [
-            "id" => $document->getAttribute('uuid'),
-            "name" => $document->getAttribute('name'),
-            "description" => $document->getAttribute('description'),
-            "status" => self::getStatus($documentRead),
-            "userTag" => $document->user->name,
-            "dateTag" => $document->getAttribute('date_from')->format('Y-m-d'),
+            "id" => $documentDto->uuid,
+            "name" => $documentDto->name,
+            "description" => $documentDto->description,
+            "status" => self::getStatus($documentDto->id, $readStatuses),
+            "userTag" => self::getAuthorTag($documentDto->userId, $authorTags),
+            "dateTag" => $documentDto->dateFrom->format('Y-m-d'),
             "buttonText" => "Go to document"
         ];
     }
 
     /**
-     * @param DocumentRead $documentRead
+     * @param int $documentId
+     * @param Collection $readStatuses
      * @return array
      */
-    protected static function getStatus(DocumentRead $documentRead): array
+    protected static function getStatus(int $documentId, Collection $readStatuses): array
     {
+        $read = $readStatuses->where('documentId', $documentId)->first();
+
+        if ($read) {
+            return [
+                'read' => true,
+                'name' => __('common::messages.statuses.read'),
+                'date' => $read->createdAt->format('Y-m-d'),
+            ];
+        }
+
         return [
-            'read' => true,
-            'name' => __('api.document.statuses.read'),
-            'date' => $documentRead->getAttribute('created_at')->format('Y-m-d'),
+            "read" => false,
+            "name" => __('common::messages.statuses.new'),
+            "date" => null
         ];
+    }
+
+    /**
+     * @param int $userId
+     * @param Collection $authorTags
+     * @return string
+     */
+    protected static function getAuthorTag(int $userId, Collection $authorTags): string
+    {
+        $author = $authorTags->get($userId);
+
+        return $author ?? "-";
     }
 }

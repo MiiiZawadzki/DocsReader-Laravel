@@ -2,12 +2,11 @@
 
 namespace Modules\Document\Models;
 
-use App\Models\UserDocument\HasRelations;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserDocument extends Model
 {
-//    use HasRelations;
 
     /**
      * The attributes that are mass assignable.
@@ -32,5 +31,13 @@ class UserDocument extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(Document::class);
     }
 }

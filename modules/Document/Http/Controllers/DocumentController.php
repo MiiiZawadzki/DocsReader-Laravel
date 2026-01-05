@@ -4,14 +4,23 @@ namespace Modules\Document\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Modules\Document\Http\Requests\MarkReadRequest;
+use Modules\Document\DTO\CreateDocumentDTO;
 use Modules\Document\Http\Requests\ShowRequest;
 use Modules\Document\Http\Requests\StoreRequest;
+use Modules\Document\Models\Document;
 use Modules\Document\Services\DocumentService;
+use Modules\Document\Transformers\IndexDocumentsDataTransformer;
+use Modules\Document\Transformers\ShowDocumentDataTransformer;
+use Modules\History\Api\HistoryApiInterface;
+use Modules\User\Api\UserApiInterface;
 
-class DocumentController
+readonly class DocumentController
 {
-    public function __construct(private readonly DocumentService $documentService)
+    public function __construct(
+        private DocumentService     $documentService,
+        private HistoryApiInterface $historyApi,
+        private UserApiInterface    $userApi,
+    )
     {
     }
 
@@ -23,21 +32,29 @@ class DocumentController
     public function index(): JsonResponse
     {
         try {
-            $documents = $this->documentService->get(Auth::user());
+            $userId = Auth::id();
+
+            $documents = $this->documentService->getForUser($userId);
+            $documentIds = $documents->pluck('id')->toArray();
+            $authorIds = $documents->pluck('user_id')->unique()->toArray();
+
+            $readStatuses = $this->historyApi->getReadStatusForDocuments($userId, $documentIds);
+            $authorTags = $this->userApi->getUsersName($authorIds);
+
+            $result = $documents->map(
+                fn(Document $document) => IndexDocumentsDataTransformer::transform(
+                    $document,
+                    $readStatuses,
+                    $authorTags
+                )
+            );
+
             return response()->json([
-                'documents' => $documents,
+                'documents' => $result,
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // TODO
     }
 
     /**
@@ -49,12 +66,13 @@ class DocumentController
     public function store(StoreRequest $request): JsonResponse
     {
         try {
-//            $document = $this->documentService->store(new CreateDocumentDTO($request));
-//            return response()->json([
-//                'message' => __('api.document.store.success', ['name' => $document->getAttribute('name')]),
-//            ]);
+            $document = $this->documentService->store(new CreateDocumentDTO($request));
+
             return response()->json([
-                'message' => __('api.document.store.success', ['name' => 'asd']),
+                'message' => __(
+                    'document::messages.store.success',
+                    ['name' => $document->getAttribute('name')]
+                ),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -70,40 +88,22 @@ class DocumentController
     public function show(ShowRequest $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
-//            $documentData = $this->documentService->show($document, Auth::user());
+            $userId = Auth::id();
+            $documentUuid = $request->route('document');
 
-//            return response()->json([
-//                'document' => $documentData,
-//            ]);
-            return response()->json([
-                'document' => [],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
-    }
+            $document = $this->documentService->getDocumentByUuid($documentUuid);
 
-    /**
-     * Mark document as read
-     *
-     * @param MarkReadRequest $request
-     * @return JsonResponse
-     */
-    public function markAsRead(MarkReadRequest $request): JsonResponse
-    {
-        try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
-//            $documentRead = $this->documentService->markRead($document, Auth::user());
-//
-//            return response()->json([
-//                'message' => __('api.document.read.success', ['name' => $document->getAttribute('name')]),
-//                'date' => $documentRead->created_at->format('Y-m-d'),
-//            ]);
+            $readStatus = $this->historyApi->getReadStatusForDocument($userId, $document->getKey());
+            $authorTag = $this->userApi->getUserName($document->getAttribute('user_id'));
+
+            $documentData = ShowDocumentDataTransformer::transform(
+                $document,
+                $readStatus->createdAt,
+                $authorTag
+            );
 
             return response()->json([
-                'message' => __('api.document.read.success', ['name' =>'asd']),
-                'date' => now()->format('Y-m-d'),
+                'document' => $documentData,
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

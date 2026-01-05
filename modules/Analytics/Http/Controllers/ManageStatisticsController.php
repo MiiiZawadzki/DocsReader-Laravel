@@ -21,13 +21,13 @@ class ManageStatisticsController
         try {
             return response()->json([
                 [
-                    'name' => __('api.statistics.manage.active.name'),
-                    'description' => __('api.statistics.manage.active.description'),
+                    'name' => __('analytics::messages.statistics.manage.active.name'),
+                    'description' => __('analytics::messages.statistics.manage.active.description'),
                     'url' => '/api/statistics/manage/documents/active',
                 ],
                 [
-                    'name' => __('api.statistics.manage.total.name'),
-                    'description' => __('api.statistics.manage.total.description'),
+                    'name' => __('analytics::messages.statistics.manage.total.name'),
+                    'description' => __('analytics::messages.statistics.manage.total.description'),
                     'url' => '/api/statistics/manage/documents/total',
                 ],
             ]);
@@ -44,8 +44,8 @@ class ManageStatisticsController
         try {
             return response()->json([
                 [
-                    'name' => __('api.charts.manage.read.name'),
-                    'description' => __('api.charts.manage.read.description'),
+                    'name' => __('analytics::messages.charts.manage.read.name'),
+                    'description' => __('analytics::messages.charts.manage.read.description'),
                     'url' => '/api/statistics/manage/read',
                 ],
             ]);
@@ -60,8 +60,10 @@ class ManageStatisticsController
     public function readStatistics(): JsonResponse
     {
         try {
+            $userId = Auth::id();
+
             return response()->json([
-                'chart_data' => $this->service->readStatistics(Auth::user(), Carbon::now()),
+                'chart_data' => $this->service->readStatistics($userId),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -74,8 +76,11 @@ class ManageStatisticsController
     public function activeDocuments(): JsonResponse
     {
         try {
+            $userId = Auth::id();
+            $date = Carbon::today();
+
             return response()->json([
-                'value' => $this->service->activeDocuments(Auth::user(), Carbon::now()),
+                'value' => $this->service->activeDocuments($userId, $date),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -88,8 +93,10 @@ class ManageStatisticsController
     public function totalDocuments(): JsonResponse
     {
         try {
+            $userId = Auth::id();
+
             return response()->json([
-                'value' => $this->service->totalDocuments(Auth::user()),
+                'value' => $this->service->totalDocuments($userId),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

@@ -18,9 +18,5 @@ return [
             'success' => 'Dokument został pomyślnie usunięty',
         ],
     ],
-    'statuses' => [
-        'new' => 'Nowy',
-        'read' => 'Przeczytany',
-    ],
     'not_found' => 'Dokument nie został znaleziony.',
 ];

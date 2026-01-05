@@ -21,18 +21,18 @@ class UserStatisticsController
         try {
             return response()->json([
                 [
-                    'name' => __('api.statistics.user.active.name'),
-                    'description' => __('api.statistics.manage.active.description'),
+                    'name' => __('analytics::messages.statistics.user.active.name'),
+                    'description' => __('analytics::messages.statistics.user.active.description'),
                     'url' => '/api/statistics/user/documents/active',
                 ],
                 [
-                    'name' => __('api.statistics.user.total.name'),
-                    'description' => __('api.statistics.manage.total.description'),
+                    'name' => __('analytics::messages.statistics.user.total.name'),
+                    'description' => __('analytics::messages.statistics.user.total.description'),
                     'url' => '/api/statistics/user/documents/total',
                 ],
                 [
-                    'name' => __('api.statistics.user.read.name'),
-                    'description' => __('api.statistics.user.read.description'),
+                    'name' => __('analytics::messages.statistics.user.read.name'),
+                    'description' => __('analytics::messages.statistics.user.read.description'),
                     'url' => '/api/statistics/user/documents/read',
                 ],
             ]);
@@ -49,8 +49,8 @@ class UserStatisticsController
         try {
             return response()->json([
                 [
-                    'name' => __('api.statistics.user.read.name'),
-                    'description' => __('api.charts.user.read.description'),
+                    'name' => __('analytics::messages.statistics.user.read.name'),
+                    'description' => __('analytics::messages.charts.user.read.description'),
                     'url' => '/api/statistics/user/read',
                 ],
             ]);
@@ -65,8 +65,10 @@ class UserStatisticsController
     public function readStatistics(): JsonResponse
     {
         try {
+            $userId = Auth::id();
+
             return response()->json([
-                'chart_data' => $this->service->readStatistics(Auth::user(), Carbon::now()),
+                'chart_data' => $this->service->readStatistics($userId),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -79,8 +81,11 @@ class UserStatisticsController
     public function activeDocuments(): JsonResponse
     {
         try {
+            $userId = Auth::id();
+            $date = Carbon::now();
+
             return response()->json([
-                'value' => $this->service->activeDocuments(Auth::user(), Carbon::now()),
+                'value' => $this->service->activeDocuments($userId, $date),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -93,8 +98,10 @@ class UserStatisticsController
     public function totalDocuments(): JsonResponse
     {
         try {
+            $userId = Auth::id();
+
             return response()->json([
-                'value' => $this->service->totalDocuments(Auth::user()),
+                'value' => $this->service->totalDocuments($userId),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -107,8 +114,10 @@ class UserStatisticsController
     public function readDocuments(): JsonResponse
     {
         try {
+            $userId = Auth::id();
+
             return response()->json([
-                'value' => $this->service->readDocuments(Auth::user()),
+                'value' => $this->service->readDocuments($userId),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

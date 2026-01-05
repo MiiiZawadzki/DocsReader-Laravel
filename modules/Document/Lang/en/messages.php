@@ -18,9 +18,5 @@ return [
             'success' => 'Document was successfully deleted',
         ],
     ],
-    'statuses' => [
-        'new' => 'New',
-        'read' => 'Read',
-    ],
     'not_found' => 'Document not found.',
 ];

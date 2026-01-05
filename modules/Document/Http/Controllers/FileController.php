@@ -2,13 +2,19 @@
 
 namespace Modules\Document\Http\Controllers;
 
-use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
 use Modules\Document\Http\Requests\ShowRequest;
+use Modules\Document\Services\DocumentService;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController
 {
+    public function __construct(
+        private DocumentService $documentService,
+    )
+    {
+    }
+
     /**
      * Return specified file from storage.
      *
@@ -17,7 +23,7 @@ class FileController
      */
     public function get(ShowRequest $request): StreamedResponse
     {
-        $document = Document::where('uuid', $request->route('document'))->first();
+        $document = $this->documentService->getDocumentByUuid($request->route('document'));
 
         if (!Storage::disk('documents')->exists($document->file_path)) {
             abort(404, __('api.document.not_found'));

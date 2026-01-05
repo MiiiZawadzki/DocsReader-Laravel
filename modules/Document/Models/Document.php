@@ -2,14 +2,12 @@
 
 namespace Modules\Document\Models;
 
-use App\Models\Document\HasRelations;
-use App\Models\Document\HasScopes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use HasScopes, SoftDeletes;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

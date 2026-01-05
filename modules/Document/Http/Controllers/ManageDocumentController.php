@@ -4,16 +4,32 @@ namespace Modules\Document\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Modules\Document\DTO\UpdateDocumentDTO;
 use Modules\Document\Http\Requests\DeleteRequest;
 use Modules\Document\Http\Requests\Manage\AssignUserRequest;
 use Modules\Document\Http\Requests\Manage\GetUsersRequest;
 use Modules\Document\Http\Requests\Manage\ShowRequest;
 use Modules\Document\Http\Requests\UpdateRequest;
+use Modules\Document\Models\Document;
+use Modules\Document\Repositories\Contracts\DocumentRepositoryInterface;
+use Modules\Document\Repositories\Contracts\UserDocumentRepositoryInterface;
+use Modules\Document\Services\DocumentService;
 use Modules\Document\Services\ManageDocumentService;
+use Modules\Document\Transformers\IndexDocumentsDataTransformer;
+use Modules\Document\Transformers\ManageDocument\ShowDocumentDataTransformer;
+use Modules\History\Api\HistoryApiInterface;
+use Modules\User\Api\UserApiInterface;
 
-class ManageDocumentController
+readonly class ManageDocumentController
 {
-    public function __construct(private readonly ManageDocumentService $documentService)
+    public function __construct(
+        private DocumentService                 $documentService,
+        private ManageDocumentService           $manageDocumentService,
+        private UserDocumentRepositoryInterface $userDocumentRepository,
+        private DocumentRepositoryInterface     $documentRepository,
+        private UserApiInterface                $userApi,
+        private HistoryApiInterface             $historyApi,
+    )
     {
     }
 
@@ -25,9 +41,22 @@ class ManageDocumentController
     public function index(): JsonResponse
     {
         try {
-            $documents = $this->documentService->get(Auth::user());
+            $userId = Auth::id();
+
+            $documents = $this->documentService->getForManager($userId);
+            $authorIds = $documents->pluck('user_id')->unique()->toArray();
+            $authorTags = $this->userApi->getUsersName($authorIds);
+
+            $result = $documents->map(
+                fn(Document $document) => IndexDocumentsDataTransformer::transform(
+                    $document,
+                    collect(),
+                    $authorTags
+                )
+            );
+
             return response()->json([
-                'documents' => $documents,
+                'documents' => $result,
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -43,13 +72,22 @@ class ManageDocumentController
     public function show(ShowRequest $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
-//            $documentData = $this->documentService->show($document, Auth::user());
-//            return response()->json([
-//                'document' => $documentData,
-//            ]);
+            $userId = Auth::id();
+            $documentUuid = $request->route('document');
+
+            $document = $this->documentService->getDocumentByUuid($documentUuid);
+
+            $readStatus = $this->historyApi->getReadStatusForDocument($userId, $document->getKey());
+            $authorTag = $this->userApi->getUserName($document->getAttribute('user_id'));
+
+            $documentData = ShowDocumentDataTransformer::transform(
+                $document,
+                $readStatus->createdAt,
+                $authorTag
+            );
+
             return response()->json([
-                'document' => [],
+                'document' => $documentData,
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -62,12 +100,13 @@ class ManageDocumentController
     public function update(UpdateRequest $request): JsonResponse
     {
         try {
-//            $document = $this->documentService->update(new UpdateDocumentDTO($request->route('document'), $request));
-//            return response()->json([
-//                'message' => __('api.document.update.success', ['name' => $document->getAttribute('name')]),
-//            ]);
+            $documentUuid = $request->route('document');
+            $dto = new UpdateDocumentDTO($documentUuid, $request);
+
+            $document = $this->manageDocumentService->update($dto);
+
             return response()->json([
-                'message' => __('api.document.update.success', ['name' => 'asd']),
+                'message' => __('document::messages.update.success', ['name' => $document->getAttribute('name')]),
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -79,14 +118,23 @@ class ManageDocumentController
      */
     public function users(GetUsersRequest $request): JsonResponse
     {
-//        $document = Document::where('uuid', $request->route('document'))->first();
-
         try {
-//            return response()->json([
-//                'users' => $this->documentService->documentUsers($document)
-//            ]);
+            $documentUuid = $request->route('document');
+            $document = $this->documentService->getDocumentByUuid($documentUuid);
+
+            $allUsers = $this->userApi->getAllUsers();
+            $assignedUserIds = $this->userDocumentRepository->getAssignedUserIds($document->getKey());
+
+            $users = $allUsers->map(function ($user) use ($assignedUserIds) {
+                return [
+                    'id' => $user->getKey(),
+                    'name' => $user->getAttribute('name'),
+                    'assign' => in_array($user->getKey(), $assignedUserIds),
+                ];
+            })->toArray();
+
             return response()->json([
-                'users' => []
+                'users' => $users
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -99,21 +147,22 @@ class ManageDocumentController
     public function userAssignment(AssignUserRequest $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
-//            $user = User::find(intval($request->route('user')));
-//
-//            $this->documentService->assignUser(
-//                document: $document,
-//                user: $user,
-//                assign: $request->boolean('assign'),
-//                changedBy: Auth::user()
-//            );
-//
-//            return response()->json([
-//                'message' => __('api.document.manage.userAssignment.success')
-//            ]);
+            $documentUuid = $request->route('document');
+            $userId = intval($request->route('user'));
+            $assign = $request->boolean('assign');
+            $changedById = Auth::id();
+
+            $document = $this->documentService->getDocumentByUuid($documentUuid);
+
+            $this->manageDocumentService->assignUser(
+                document: $document,
+                userId: $userId,
+                assign: $assign,
+                changedById: $changedById
+            );
+
             return response()->json([
-                'message' => __('api.document.manage.userAssignment.success')
+                'message' => __('document::messages.manage.userAssignment.success')
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
@@ -126,15 +175,12 @@ class ManageDocumentController
     public function delete(DeleteRequest $request): JsonResponse
     {
         try {
-//            $document = Document::where('uuid', $request->route('document'))->first();
-//
-//            $this->documentService->delete($document);
-//
-//            return response()->json([
-//                'message' => __('api.document.manage.delete.success')
-//            ]);
+            $documentUuid = $request->route('document');
+
+            $this->documentRepository->delete($documentUuid);
+
             return response()->json([
-                'message' => __('api.document.manage.delete.success')
+                'message' => __('document::messages.manage.delete.success')
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);

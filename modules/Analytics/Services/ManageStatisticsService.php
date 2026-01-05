@@ -2,60 +2,75 @@
 
 namespace Modules\Analytics\Services;
 
+use Carbon\Carbon;
+use Modules\Document\Api\DocumentApiInterface;
+use Modules\History\Api\HistoryApiInterface;
+
 class ManageStatisticsService
 {
-    /**
-     * @return array
-     */
-    public function readStatistics(): array
+    public function __construct(
+        private readonly HistoryApiInterface $historyApi,
+        private readonly DocumentApiInterface $documentApi
+    )
     {
-//        $usersAssigned = Document::with(['userDocuments'])
-//            ->forManager($user)
-//            ->get()
-//            ->map(fn(Document $document) => $document->userDocuments)
-//            ->flatten()
-//            ->count();
-//
-//
-//        $usersAssignedThatRead = Document::with(['reads'])
-//            ->forManager($user)
-//            ->get()
-//            ->map(fn(Document $document) => $document->reads)
-//            ->flatten()
-//            ->count();
+    }
+
+    /**
+     * @param int $userId
+     * @return array[]
+     */
+    public function readStatistics(int $userId): array
+    {
+        $totalDocuments = $this->documentApi->getUsersForCreatedDocumentsCount($userId);
+        $documentsRead = $this->readDocuments($userId);
+
+        $notRead = max($totalDocuments - $documentsRead, 0);
+
+        $readPercentage = round(
+            ($documentsRead / max($totalDocuments, 1)) * 100,
+            2
+        );
+        $notReadPercentage = round(($notRead / max($totalDocuments, 1)) * 100, 2);
 
         return [
             [
-                'value' => 123,
-                'name' => 'Read'
+                'value' => $documentsRead,
+                'name' => __("analytics::messages.charts.read", ["percentage" => $readPercentage])
             ],
             [
-                'value' => max(321 - 123, 0),
-                'name' => 'Not read'
+                'value' => $notRead,
+                'name' => __("analytics::messages.charts.not_read", ["percentage" => $notReadPercentage])
             ],
         ];
     }
 
     /**
+     * @param int $userId
+     * @param Carbon $date
      * @return int
      */
-    public function activeDocuments(): int
+    public function activeDocuments(int $userId, Carbon $date): int
     {
-//        return Document::with(['userDocuments'])
-//            ->forManager($user)
-//            ->forDate($date)
-//            ->count();
-        return 15;
+        return $this->documentApi->getCreatedDocumentsCountForDate($userId, $date);
     }
 
     /**
+     * @param int $userId
      * @return int
      */
-    public function totalDocuments(): int
+    public function totalDocuments(int $userId): int
     {
-//        return Document::with(['userDocuments'])
-//            ->forManager($user)
-//            ->count();
-        return 100;
+        return $this->documentApi->getCreatedDocumentsCount($userId);
+    }
+
+    /**
+     * @param int $userId
+     * @return int
+     */
+    public function readDocuments(int $userId): int
+    {
+        $managerDocuments = $this->documentApi->getManagerDocuments($userId);
+
+        return $this->historyApi->getDocumentsReadCount($managerDocuments->pluck('id')->toArray());
     }
 }
