@@ -4,11 +4,15 @@ namespace Modules\History\Api;
 
 use Illuminate\Support\Collection;
 use Modules\History\DTO\DocumentReadStatusDTO;
-use Modules\History\Models\DocumentRead;
+use Modules\History\Repositories\Contracts\DocumentReadRepositoryInterface;
 
 class HistoryApi implements HistoryApiInterface
 {
-    // TODO:- use repository!
+    public function __construct(
+        private readonly DocumentReadRepositoryInterface $repository
+    )
+    {
+    }
     /**
      * @param int $userId
      * @param array $documentIds
@@ -16,9 +20,8 @@ class HistoryApi implements HistoryApiInterface
      */
     public function getReadStatusForDocuments(int $userId, array $documentIds): Collection
     {
-        return DocumentRead::whereIn('document_id', $documentIds)->where('user_id', $userId)
-            ->get()
-            ->map(fn(DocumentRead $documentRead) => DocumentReadStatusDTO::fromModel($documentRead));
+        return $this->repository->getReadStatusForDocuments($userId, $documentIds)
+            ->map(fn($documentRead) => DocumentReadStatusDTO::fromModel($documentRead));
     }
 
     /**
@@ -28,9 +31,7 @@ class HistoryApi implements HistoryApiInterface
      */
     public function getReadStatusForDocument(int $userId, int $documentId): DocumentReadStatusDTO
     {
-        $model = DocumentRead::where('document_id', $documentId)
-            ->where('user_id', $userId)
-            ->first();
+        $model = $this->repository->getReadStatusForDocument($userId, $documentId);
 
         return DocumentReadStatusDTO::fromModel($model);
     }
@@ -41,7 +42,7 @@ class HistoryApi implements HistoryApiInterface
      */
     public function getDocumentReadCount(int $documentId): int
     {
-        return DocumentRead::where('document_id', $documentId)->count();
+        return $this->repository->getDocumentReadCount($documentId);
     }
 
     /**
@@ -50,7 +51,7 @@ class HistoryApi implements HistoryApiInterface
      */
     public function getUserDocumentReadCount(int $userId): int
     {
-        return DocumentRead::where('user_id', $userId)->count();
+        return $this->repository->getUserDocumentReadCount($userId);
     }
 
     /**
@@ -59,6 +60,6 @@ class HistoryApi implements HistoryApiInterface
      */
     public function getDocumentsReadCount(array $documentsId): int
     {
-        return DocumentRead::whereIn('document_id', $documentsId)->count();
+        return $this->repository->getDocumentsReadCount($documentsId);
     }
 }
