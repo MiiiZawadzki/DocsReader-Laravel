@@ -41,7 +41,7 @@ readonly class DocumentDTO
         return new self(
             id: $document->getAttribute('id'),
             name: $document->getAttribute('name'),
-            uuid: $document->getAttribute('name'),
+            uuid: $document->getAttribute('uuid'),
             sourceName: $document->getAttribute('source_name'),
             description: $document->getAttribute('description'),
             userId: $document->getAttribute('user_id'),

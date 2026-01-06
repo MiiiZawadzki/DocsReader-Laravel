@@ -3,14 +3,14 @@
 namespace Modules\Document\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
-use Modules\Document\Http\Requests\ShowRequest;
+use Modules\Document\Http\Requests\GetFileRequest;
 use Modules\Document\Services\DocumentService;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FileController
 {
     public function __construct(
-        private DocumentService $documentService,
+        private readonly DocumentService $documentService,
     )
     {
     }
@@ -18,10 +18,10 @@ class FileController
     /**
      * Return specified file from storage.
      *
-     * @param ShowRequest $request
+     * @param GetFileRequest $request
      * @return StreamedResponse
      */
-    public function get(ShowRequest $request): StreamedResponse
+    public function get(GetFileRequest $request): StreamedResponse
     {
         $document = $this->documentService->getDocumentByUuid($request->route('document'));
 

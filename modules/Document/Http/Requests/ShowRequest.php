@@ -2,9 +2,9 @@
 
 namespace Modules\Document\Http\Requests;
 
-use App\Models\Document;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Modules\Document\Api\DocumentApi;
 
 class ShowRequest extends FormRequest
 {
@@ -13,19 +13,11 @@ class ShowRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
-//        if (!Auth::check() || !$id = $this->route('document')) {
-//            return false;
-//        }
-//
-//        $isAssigned = Document::where('uuid', $id)
-//            ->forUser(Auth::user())
-//            ->exists();
-//
-//        $isManager = Document::where('uuid', $id)
-//            ->forManager(Auth::user())
-//            ->exists();
-//
-//        return $isAssigned || $isManager;
+        if (!Auth::check() || !$id = $this->route('document')) {
+            return false;
+        }
+        $documentApi = app()->make(DocumentApi::class);
+
+        return $documentApi->verifyAssignedDocument(Auth::id(), $id);
     }
 }

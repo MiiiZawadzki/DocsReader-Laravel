@@ -3,6 +3,7 @@
 namespace Modules\Document\Repositories\Contracts;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 interface UserDocumentRepositoryInterface
 {
@@ -14,9 +15,9 @@ interface UserDocumentRepositoryInterface
 
     /**
      * @param int $userId
-     * @return array
+     * @return Collection
      */
-    public function getAssignedDocumentsId(int $userId): array;
+    public function getAssignedDocuments(int $userId): Collection;
 
     /**
      * @param int $userId

@@ -13,7 +13,7 @@ readonly class DocumentApi implements DocumentApiInterface
 {
     public function __construct(
         private UserDocumentRepositoryInterface $userDocumentRepository,
-        private DocumentRepositoryInterface $documentRepository
+        private DocumentRepositoryInterface     $documentRepository
     )
     {
     }
@@ -68,7 +68,19 @@ readonly class DocumentApi implements DocumentApiInterface
      */
     public function getAssignedDocumentsCount(int $userId): int
     {
-        return count($this->userDocumentRepository->getAssignedDocumentsId($userId));
+        return count($this->userDocumentRepository->getAssignedDocuments($userId));
+    }
+
+    /**
+     * @param int $userId
+     * @param string $documentUuid
+     * @return bool
+     */
+    public function verifyAssignedDocument(int $userId, string $documentUuid): bool
+    {
+        $document = $this->documentRepository->getByUuid($documentUuid);
+
+        return $this->userDocumentRepository->getAssignedDocuments($userId)->contains('document_id', $document->id);
     }
 
     /**

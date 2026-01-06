@@ -3,6 +3,8 @@
 namespace Modules\History\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Modules\Document\Api\DocumentApi;
 
 class MarkReadRequest extends FormRequest
 {
@@ -11,14 +13,12 @@ class MarkReadRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // TODO:- implement this logic
-        return true;
-//        if (!Auth::check() || !$id = $this->route('document')) {
-//            return false;
-//        }
-//
-//        return Document::where('uuid', $id)
-//            ->forUser(Auth::user())
-//            ->exists();
+        if (!Auth::check() || !$id = $this->route('document')) {
+            return false;
+        }
+
+        $documentApi = app()->make(DocumentApi::class);
+
+        return $documentApi->verifyAssignedDocument(Auth::id(), $id);
     }
 }

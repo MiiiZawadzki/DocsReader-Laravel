@@ -22,6 +22,13 @@ interface DocumentApiInterface
 
     /**
      * @param int $userId
+     * @param string $documentUuid
+     * @return bool
+     */
+    public function verifyAssignedDocument(int $userId, string $documentUuid): bool;
+
+    /**
+     * @param int $userId
      * @param Carbon $date
      * @return int
      */

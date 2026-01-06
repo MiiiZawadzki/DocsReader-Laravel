@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Document\Http\Requests\Manage;
+namespace Modules\Document\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Modules\Document\Api\DocumentApi;
 
-class ShowRequest extends FormRequest
+class GetFileRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,6 +18,9 @@ class ShowRequest extends FormRequest
         }
         $documentApi = app()->make(DocumentApi::class);
 
-        return $documentApi->getManagerDocuments(Auth::id())->contains('uuid', $id);
+        $isAssigned = $documentApi->verifyAssignedDocument(Auth::id(), $id);
+        $isManager = $documentApi->getManagerDocuments(Auth::id())->contains('uuid', $id);
+
+        return $isAssigned || $isManager;
     }
 }

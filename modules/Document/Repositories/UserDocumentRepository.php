@@ -4,6 +4,7 @@ namespace Modules\Document\Repositories;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Modules\Document\Models\UserDocument;
 use Modules\Document\Repositories\Contracts\UserDocumentRepositoryInterface;
 
@@ -23,14 +24,13 @@ class UserDocumentRepository implements UserDocumentRepositoryInterface
 
     /**
      * @param int $userId
-     * @return array
+     * @return Collection
      */
-    public function getAssignedDocumentsId(int $userId): array
+    public function getAssignedDocuments(int $userId): Collection
     {
         return UserDocument::where('user_id', $userId)
             ->whereHas('document')
-            ->pluck('document_id')
-            ->toArray();
+            ->get();
     }
 
     /**
