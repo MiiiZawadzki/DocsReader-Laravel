@@ -2,28 +2,30 @@
 
 namespace Modules\Auth\Tests\Unit\Http\Controllers\Api;
 
-use App\Models\User;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
 use Illuminate\Translation\Translator;
-use Mockery;
+use Modules\Access\Api\AccessApiInterface;
 use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
 use Modules\Auth\Http\Controllers\AuthController;
 use Modules\Auth\Http\Requests\LoginRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\Auth\Services\AuthService;
-use Tests\TestCase;
+use Modules\User\Api\UserApiInterface;
+use Modules\User\Models\User;
+use Tests\Unit\UnitTestCase;
 
-
-class AuthControllerTest extends TestCase
+class AuthControllerTest extends UnitTestCase
 {
     public function test_register_calls_service_with_register_data_dto(): void
     {
-        $authService = Mockery::mock(AuthService::class);
-        $sessionMock = Mockery::mock(Session::class);
-        $registerRequest = Mockery::mock(RegisterRequest::class);
-        $translatorMock = Mockery::mock(Translator::class);
+        $authService = $this->createMock(AuthService::class);
+        $sessionMock = $this->createMock(Session::class);
+        $userApiMock = $this->createMock(UserApiInterface::class);
+        $accessApiMock = $this->createMock(AccessApiInterface::class);
+        $registerRequest = $this->createMock(RegisterRequest::class);
+        $translatorMock = $this->createMock(Translator::class);
 
         $userData = [
             'name' => 'John Doe',
@@ -31,73 +33,95 @@ class AuthControllerTest extends TestCase
             'password' => 'password123',
         ];
 
-        $registerRequest->shouldReceive('validated')
-            ->andReturn($userData);
+        $registerRequest
+            ->expects($this->once())
+            ->method('validated')
+            ->willReturn($userData);
 
-        $registerRequest->shouldReceive('session')
-            ->andReturn($sessionMock);
+        $registerRequest
+            ->expects($this->once())
+            ->method('session')
+            ->willReturn($sessionMock);
 
-        $sessionMock->shouldReceive('regenerate');
+        $sessionMock
+            ->expects($this->once())
+            ->method('regenerate');
 
-        $translatorMock->shouldReceive('get')
-            ->withArgs(['auth::messages.register_success']);
+        $translatorMock
+            ->expects($this->once())
+            ->method('get')
+            ->with('auth::messages.register_success');
 
-        $authService->shouldReceive('register')
-            ->once()
-            ->with(Mockery::on(function (RegisterDataDTO $dto) use ($userData) {
+        $authService
+            ->expects($this->once())
+            ->method('register')
+            ->with($this->callback(function (RegisterDataDTO $dto) use ($userData) {
                 return $dto->name === $userData['name']
                     && $dto->email === $userData['email']
                     && $dto->plainTextPassword === $userData['password'];
             }));
 
-        $controller = new AuthController($authService, $translatorMock);
+        $controller = new AuthController($authService, $translatorMock, $userApiMock, $accessApiMock);
+
         $controller->register($registerRequest);
     }
 
+
     public function test_login_calls_service_with_login_user_dto_when_credentials_are_valid(): void
     {
-        $authService = Mockery::mock(AuthService::class);
-        $loginRequest = Mockery::mock(LoginRequest::class);
-        $user = Mockery::mock(User::class);
-        $translatorMock = Mockery::mock(Translator::class);
-        $sessionMock = Mockery::mock(Session::class);
+        $authService = $this->createMock(AuthService::class);
+        $sessionMock = $this->createMock(Session::class);
+        $userApiMock = $this->createMock(UserApiInterface::class);
+        $accessApiMock = $this->createMock(AccessApiInterface::class);
+        $loginRequest = $this->createMock(LoginRequest::class);
+        $user = $this->createMock(User::class);
+        $translatorMock = $this->createMock(Translator::class);
 
         $credentials = [
             'email' => 'john.doe@example.com',
             'password' => 'password123',
         ];
 
-        $loginRequest->shouldReceive('session')
-            ->andReturn($sessionMock);
+        $loginRequest
+            ->expects($this->once())
+            ->method('validated')
+            ->willReturn($credentials);
 
-        $user->shouldReceive('getAttribute')
-            ->withArgs(['name'])
-            ->andReturn('John Doe');
+        $loginRequest
+            ->expects($this->once())
+            ->method('session')
+            ->willReturn($sessionMock);
 
-        $user->shouldReceive('getAttribute')
-            ->withArgs(['email'])
-            ->andReturn('john.doe@example.com');
+        $sessionMock
+            ->expects($this->once())
+            ->method('regenerate');
 
+        $user
+            ->expects($this->any())
+            ->method('getKey')
+            ->willReturn(1);
 
-        $user->shouldReceive('getAttribute')
-            ->withArgs(['userPermissions'])
-            ->andReturn(collect());
+        $user
+            ->expects($this->any())
+            ->method('getAttribute')
+            ->willReturnCallback(function ($attribute) {
+                return match ($attribute) {
+                    'name' => 'John Doe',
+                    'email' => 'john.doe@example.com',
+                    'userPermissions' => collect(),
+                };
+            });
 
-        $sessionMock->shouldReceive('regenerate');
-
-        $loginRequest->shouldReceive('validated')
-            ->once()
-            ->andReturn($credentials);
-
-        $authService->shouldReceive('login')
-            ->once()
-            ->with(Mockery::on(function (LoginUserDTO $dto) use ($credentials) {
+        $authService
+            ->expects($this->once())
+            ->method('login')
+            ->with($this->callback(function (LoginUserDTO $dto) use ($credentials) {
                 return $dto->email === $credentials['email']
                     && $dto->password === $credentials['password'];
             }))
-            ->andReturn($user);
+            ->willReturn($user);
 
-        $controller = new AuthController($authService, $translatorMock);
+        $controller = new AuthController($authService, $translatorMock, $userApiMock, $accessApiMock);
         $response = $controller->login($loginRequest);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -110,52 +134,38 @@ class AuthControllerTest extends TestCase
 
     public function test_login_calls_service_with_login_user_dto_when_credentials_are_invalid(): void
     {
-        $authService = Mockery::mock(AuthService::class);
-        $loginRequest = Mockery::mock(LoginRequest::class);
-        $user = Mockery::mock(User::class);
-        $translatorMock = Mockery::mock(Translator::class);
-        $sessionMock = Mockery::mock(Session::class);
+        $authService = $this->createMock(AuthService::class);
+        $userApiMock = $this->createMock(UserApiInterface::class);
+        $accessApiMock = $this->createMock(AccessApiInterface::class);
+        $loginRequest = $this->createMock(LoginRequest::class);
+        $translatorMock = $this->createMock(Translator::class);
 
         $credentials = [
             'email' => 'john.doe@example.com',
             'password' => 'password123',
         ];
 
-        $loginRequest->shouldReceive('session')
-            ->andReturn($sessionMock);
+        $loginRequest
+            ->expects($this->once())
+            ->method('validated')
+            ->willReturn($credentials);
 
-        $user->shouldReceive('getAttribute')
-            ->withArgs(['name'])
-            ->andReturn('John Doe');
+        $translatorMock
+            ->expects($this->once())
+            ->method('get')
+            ->with('auth::messages.failed')
+            ->willReturn('auth failed');
 
-        $user->shouldReceive('getAttribute')
-            ->withArgs(['email'])
-            ->andReturn('john.doe@example.com');
-
-        $translatorMock->shouldReceive('get')
-            ->withArgs(['auth::messages.failed'])
-            ->andReturn('auth failed')
-            ->once();
-
-        $user->shouldReceive('getAttribute')
-            ->withArgs(['userPermissions'])
-            ->andReturn(collect());
-
-        $sessionMock->shouldReceive('regenerate');
-
-        $loginRequest->shouldReceive('validated')
-            ->once()
-            ->andReturn($credentials);
-
-        $authService->shouldReceive('login')
-            ->once()
-            ->with(Mockery::on(function (LoginUserDTO $dto) use ($credentials) {
+        $authService
+            ->expects($this->once())
+            ->method('login')
+            ->with($this->callback(function (LoginUserDTO $dto) use ($credentials) {
                 return $dto->email === $credentials['email']
                     && $dto->password === $credentials['password'];
             }))
-            ->andReturn(null);
+            ->willReturn(null);
 
-        $controller = new AuthController($authService, $translatorMock);
+        $controller = new AuthController($authService, $translatorMock, $userApiMock, $accessApiMock);
         $response = $controller->login($loginRequest);
 
         $this->assertEquals(401, $response->getStatusCode());
@@ -164,33 +174,37 @@ class AuthControllerTest extends TestCase
 
     public function test_logout_calls_service_with_user(): void
     {
-        $authService = Mockery::mock(AuthService::class);
-        $request = Mockery::mock(Request::class);
-        $user = Mockery::mock(User::class);
-        $translatorMock = Mockery::mock(Translator::class);
-        $sessionMock = Mockery::mock(Session::class);
+        $authService = $this->createMock(AuthService::class);
+        $sessionMock = $this->createMock(Session::class);
+        $userApiMock = $this->createMock(UserApiInterface::class);
+        $accessApiMock = $this->createMock(AccessApiInterface::class);
+        $request = $this->createMock(Request::class);
+        $translatorMock = $this->createMock(Translator::class);
 
-        $request->shouldReceive('session')
-            ->andReturn($sessionMock);
+        $request
+            ->expects($this->exactly(2))
+            ->method('session')
+            ->willReturn($sessionMock);
 
-        $request->shouldReceive('user')
-            ->once()
-            ->andReturn($user);
+        $sessionMock
+            ->expects($this->once())
+            ->method('invalidate');
 
-        $translatorMock->shouldReceive('get')
-            ->withArgs(['auth::messages.logout_success'])
-            ->andReturn('auth logout success')
-            ->once();
+        $sessionMock
+            ->expects($this->once())
+            ->method('regenerateToken');
 
-        $sessionMock->shouldReceive('invalidate')->once();
-        $sessionMock->shouldReceive('regenerateToken')->once();
+        $translatorMock
+            ->expects($this->once())
+            ->method('get')
+            ->with('auth::messages.logout_success')
+            ->willReturn('auth logout success');
 
+        $authService
+            ->expects($this->once())
+            ->method('logout');
 
-        $authService->shouldReceive('logout')
-            ->once()
-            ->with($user);
-
-        $controller = new AuthController($authService, $translatorMock);
+        $controller = new AuthController($authService, $translatorMock, $userApiMock, $accessApiMock);
         $response = $controller->logout($request);
 
         $this->assertEquals(200, $response->getStatusCode());

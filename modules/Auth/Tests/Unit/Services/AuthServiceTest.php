@@ -2,20 +2,23 @@
 
 namespace Modules\Auth\Tests\Unit\Services;
 
-use App\Models\User;
-use App\Repositories\Contracts\UserRepositoryInterface;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Contracts\Hashing\Hasher;
 use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
 use Modules\Auth\Services\AuthService;
-use Tests\TestCase;
+use Modules\User\Api\UserApiInterface;
+use Modules\User\Models\User;
+use Tests\Unit\UnitTestCase;
 
-class AuthServiceTest extends TestCase
+class AuthServiceTest extends UnitTestCase
 {
     public function test_register_hashes_password_and_creates_user(): void
     {
-        $userRepository = $this->createMock(UserRepositoryInterface::class);
+        $userApi = $this->createMock(UserApiInterface::class);
+        $hasher = $this->createMock(Hasher::class);
+        $auth = $this->createMock(AuthFactory::class);
         $expectedUser = new User();
 
         $hashedPassword = 'hashed-password';
@@ -26,17 +29,17 @@ class AuthServiceTest extends TestCase
             'password' => $plainPassword,
         ];
 
-        Hash::shouldReceive('make')
-            ->once()
+        $hasher->expects($this->once())
+            ->method('make')
             ->with($plainPassword)
-            ->andReturn($hashedPassword);
+            ->willReturn($hashedPassword);
 
-        $authService = new AuthService($userRepository);
+        $authService = new AuthService($userApi, $hasher, $auth);
         $registerDto = new RegisterDataDTO($userData);
 
-        $userRepository
+        $userApi
             ->expects($this->once())
-            ->method('create')
+            ->method('createUser')
             ->with($this->callback(function (array $dataArray) use ($registerDto, $hashedPassword) {
 
                 $this->assertSame($registerDto->name, $dataArray['name']);
@@ -54,8 +57,11 @@ class AuthServiceTest extends TestCase
 
     public function test_login_returns_user_when_credentials_are_valid(): void
     {
-        $userRepository = $this->createMock(UserRepositoryInterface::class);
-        $authService = new AuthService($userRepository);
+        $userApi = $this->createMock(UserApiInterface::class);
+        $hasher = $this->createMock(Hasher::class);
+        $auth = $this->createMock(AuthFactory::class);
+        $guard = $this->createMock(StatefulGuard::class);
+        $authService = new AuthService($userApi, $hasher, $auth);
 
         $credentialsData = [
             'email' => 'john.doe@example.com',
@@ -65,14 +71,18 @@ class AuthServiceTest extends TestCase
         $loginDto = new LoginUserDTO($credentialsData);
         $expectedUser = new User();
 
-        Auth::shouldReceive('attempt')
-            ->once()
-            ->with($credentialsData)
-            ->andReturn(true);
+        $auth->expects($this->once())
+            ->method('guard')
+            ->willReturn($guard);
 
-        Auth::shouldReceive('user')
-            ->once()
-            ->andReturn($expectedUser);
+        $guard->expects($this->once())
+            ->method('attempt')
+            ->with($credentialsData)
+            ->willReturn(true);
+
+        $guard->expects($this->once())
+            ->method('user')
+            ->willReturn($expectedUser);
 
         $result = $authService->login($loginDto);
 
@@ -81,8 +91,11 @@ class AuthServiceTest extends TestCase
 
     public function test_login_returns_null_when_credentials_are_invalid(): void
     {
-        $userRepository = $this->createMock(UserRepositoryInterface::class);
-        $authService = new AuthService($userRepository);
+        $userApi = $this->createMock(UserApiInterface::class);
+        $hasher = $this->createMock(Hasher::class);
+        $auth = $this->createMock(AuthFactory::class);
+        $guard = $this->createMock(StatefulGuard::class);
+        $authService = new AuthService($userApi, $hasher, $auth);
 
         $credentialsData = [
             'email' => 'john.doe@example.com',
@@ -91,43 +104,40 @@ class AuthServiceTest extends TestCase
 
         $loginDto = new LoginUserDTO($credentialsData);
 
-        Auth::shouldReceive('attempt')
-            ->once()
-            ->with($credentialsData)
-            ->andReturn(false);
+        $auth->expects($this->once())
+            ->method('guard')
+            ->willReturn($guard);
 
-        Auth::shouldReceive('user')
-            ->never();
+        $guard->expects($this->once())
+            ->method('attempt')
+            ->with($credentialsData)
+            ->willReturn(false);
+
+        $guard->expects($this->never())
+            ->method('user');
 
         $result = $authService->login($loginDto);
 
         $this->assertNull($result);
     }
 
-    public function test_logout_deletes_tokens_and_logs_out_user(): void
+    public function test_logs_out_user(): void
     {
-        $userRepository = $this->createMock(UserRepositoryInterface::class);
-        $authService = new AuthService($userRepository);
+        $userApi = $this->createMock(UserApiInterface::class);
+        $hasher = $this->createMock(Hasher::class);
+        $auth = $this->createMock(AuthFactory::class);
+        $authService = new AuthService($userApi, $hasher, $auth);
 
         $user = $this->createMock(User::class);
-        $tokens = \Mockery::mock();
-        $guard = \Mockery::mock(\Illuminate\Contracts\Auth\Guard::class);
+        $guard = $this->createMock(StatefulGuard::class);
 
-        $user->expects($this->once())
-            ->method('tokens')
-            ->willReturn($tokens);
-
-        $tokens->shouldReceive('delete')
-            ->once()
-            ->andReturn(true);
-
-        Auth::shouldReceive('guard')
-            ->once()
+        $auth->expects($this->once())
+            ->method('guard')
             ->with('web')
-            ->andReturn($guard);
+            ->willReturn($guard);
 
-        $guard->shouldReceive('logout')
-            ->once();
+        $guard->expects($this->once())
+            ->method('logout');
 
         $authService->logout($user);
     }

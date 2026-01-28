@@ -12,7 +12,6 @@ use Modules\Auth\DTO\RegisterDataDTO;
 use Modules\Auth\Http\Requests\LoginRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\Auth\Services\AuthService;
-use Modules\User\Api\UserApi;
 use Modules\User\Api\UserApiInterface;
 
 class AuthController
@@ -22,8 +21,7 @@ class AuthController
         public readonly Translator $translator,
         public readonly UserApiInterface $userApi,
         public readonly AccessApiInterface $accessApi,
-    )
-    {
+    ) {
     }
 
     public function register(RegisterRequest $request): JsonResponse
@@ -67,24 +65,26 @@ class AuthController
         $request->session()->regenerate();
 
         return new JsonResponse(
-            ['user' => new LoginResponseDTO(
-                $user->getAttribute('name'),
-                $user->getAttribute('email'),
-                $this->accessApi->getPermissionsForUser($user->getKey()),
-            )],
+            [
+                'user' => new LoginResponseDTO(
+                    $user->getAttribute('name'),
+                    $user->getAttribute('email'),
+                    $this->accessApi->getPermissionsForUser($user->getKey()),
+                )
+            ],
             200
         );
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $this->service->logout($request->user());
+        $this->service->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return new JsonResponse(
-            ['message' =>  $this->translator->get('auth::messages.logout_success')],
+            ['message' => $this->translator->get('auth::messages.logout_success')],
             200
         );
     }

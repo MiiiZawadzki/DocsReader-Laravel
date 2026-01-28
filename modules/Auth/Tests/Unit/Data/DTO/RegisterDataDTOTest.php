@@ -3,9 +3,9 @@
 namespace Modules\Auth\Tests\Unit\Data\DTO;
 
 use Modules\Auth\DTO\RegisterDataDTO;
-use PHPUnit\Framework\TestCase;
+use Tests\Unit\UnitTestCase;
 
-class RegisterDataDTOTest extends TestCase
+class RegisterDataDTOTest extends UnitTestCase
 {
     public function test_construct_sets_public_properties(): void
     {

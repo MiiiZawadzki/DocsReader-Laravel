@@ -3,9 +3,9 @@
 namespace Modules\Auth\Tests\Unit\Data\DTO;
 
 use Modules\Auth\DTO\LoginUserDTO;
-use PHPUnit\Framework\TestCase;
+use Tests\Unit\UnitTestCase;
 
-class LoginUserDTOTest extends TestCase
+class LoginUserDTOTest extends UnitTestCase
 {
     public function test_construct_sets_public_properties(): void
     {
