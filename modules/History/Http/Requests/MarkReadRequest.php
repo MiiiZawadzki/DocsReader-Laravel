@@ -4,7 +4,7 @@ namespace Modules\History\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use Modules\Document\Api\DocumentApi;
+use Modules\Document\Api\DocumentApiInterface;
 
 class MarkReadRequest extends FormRequest
 {
@@ -17,7 +17,7 @@ class MarkReadRequest extends FormRequest
             return false;
         }
 
-        $documentApi = app()->make(DocumentApi::class);
+        $documentApi = app()->make(DocumentApiInterface::class);
 
         return $documentApi->verifyAssignedDocument(Auth::id(), $id);
     }

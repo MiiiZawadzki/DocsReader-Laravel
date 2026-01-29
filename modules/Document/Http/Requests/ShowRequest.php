@@ -4,7 +4,7 @@ namespace Modules\Document\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use Modules\Document\Api\DocumentApi;
+use Modules\Document\Api\DocumentApiInterface;
 
 class ShowRequest extends FormRequest
 {
@@ -16,7 +16,7 @@ class ShowRequest extends FormRequest
         if (!Auth::check() || !$id = $this->route('document')) {
             return false;
         }
-        $documentApi = app()->make(DocumentApi::class);
+        $documentApi = app()->make(DocumentApiInterface::class);
 
         return $documentApi->verifyAssignedDocument(Auth::id(), $id);
     }

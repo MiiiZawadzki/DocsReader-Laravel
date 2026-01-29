@@ -4,7 +4,7 @@ namespace Modules\History\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Modules\Document\Api\DocumentApi;
+use Modules\Document\Api\DocumentApiInterface;
 use Modules\History\Api\HistoryApiInterface;
 use Modules\History\Http\Requests\GetHistoryRequest;
 use Modules\History\Http\Requests\MarkReadRequest;
@@ -16,7 +16,7 @@ use Modules\User\Api\UserApiInterface;
 class DocumentsHistoryController
 {
     public function __construct(
-        private readonly DocumentApi            $documentApi,
+        private readonly DocumentApiInterface   $documentApi,
         private readonly DocumentReadRepository $documentReadRepository,
         private HistoryApiInterface             $historyApi,
         private UserApiInterface                $userApi,
@@ -34,7 +34,7 @@ class DocumentsHistoryController
             $userId = Auth::id();
 
             $documents = $this->documentReadRepository->getReadDocuments($userId);
-            $documentsDto = $this->documentApi->getDocumentsByid($documents->pluck('document_id')->toArray());
+            $documentsDto = $this->documentApi->getDocumentsById($documents->pluck('document_id')->toArray());
 
             $documentIds = $documentsDto->pluck('id')->toArray();
             $authorIds = $documentsDto->pluck('userId')->unique()->toArray();

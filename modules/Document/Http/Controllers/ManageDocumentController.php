@@ -122,14 +122,14 @@ readonly class ManageDocumentController
             $documentUuid = $request->route('document');
             $document = $this->documentService->getDocumentByUuid($documentUuid);
 
-            $allUsers = $this->userApi->getAllUsers();
+            $allUsersDto = $this->userApi->getAllUsers();
             $assignedUserIds = $this->userDocumentRepository->getAssignedUserIds($document->getKey());
 
-            $users = $allUsers->map(function ($user) use ($assignedUserIds) {
+            $users = $allUsersDto->map(function ($userDto) use ($assignedUserIds) {
                 return [
-                    'id' => $user->getKey(),
-                    'name' => $user->getAttribute('name'),
-                    'assign' => in_array($user->getKey(), $assignedUserIds),
+                    'id' => $userDto->id,
+                    'name' => $userDto->name,
+                    'assign' => in_array($userDto->id, $assignedUserIds),
                 ];
             })->toArray();
 

@@ -44,7 +44,7 @@ readonly class DocumentApi implements DocumentApiInterface
 
     /**
      * @param array $documentsId
-     * @return Collection
+     * @return Collection<int, DocumentDTO>
      */
     public function getDocumentsById(array $documentsId): Collection
     {
@@ -54,7 +54,7 @@ readonly class DocumentApi implements DocumentApiInterface
 
     /**
      * @param int $userId
-     * @return Collection
+     * @return Collection<int, DocumentDTO>
      */
     public function getManagerDocuments(int $userId): Collection
     {

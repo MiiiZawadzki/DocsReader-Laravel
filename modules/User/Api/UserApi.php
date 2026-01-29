@@ -4,7 +4,6 @@ namespace Modules\User\Api;
 
 use Illuminate\Support\Collection;
 use Modules\User\DTO\UserDTO;
-use Modules\User\Models\User;
 use Modules\User\Repositories\Contracts\UserRepositoryInterface;
 
 readonly class UserApi implements UserApiInterface
@@ -26,16 +25,18 @@ readonly class UserApi implements UserApiInterface
 
     /**
      * @param array $userData
-     * @return User
+     * @return UserDTO
      */
-    public function createUser(array $userData): User
+    public function createUser(array $userData): UserDTO
     {
-        return $this->repository->create($userData);
+        $user = $this->repository->create($userData);
+
+        return new UserDTO($user);
     }
 
     /**
      * @param array $userIds
-     * @return Collection
+     * @return Collection<int, string>
      */
     public function getUsersName(array $userIds): Collection
     {
@@ -52,10 +53,10 @@ readonly class UserApi implements UserApiInterface
     }
 
     /**
-     * @return Collection
+     * @return Collection<int, UserDTO>
      */
     public function getAllUsers(): Collection
     {
-        return $this->repository->getAll();
+        return $this->repository->getAll()->map(fn($user) => new UserDTO($user));
     }
 }

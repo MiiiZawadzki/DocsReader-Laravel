@@ -48,14 +48,14 @@ class AuthController
     {
         $credentials = $request->validated();
 
-        $user = $this->service->login(
+        $userDto = $this->service->login(
             new LoginUserDTO([
                 'email' => $credentials['email'],
                 'password' => $credentials['password']
             ])
         );
 
-        if (!$user) {
+        if (!$userDto) {
             return new JsonResponse(
                 ['message' => $this->translator->get('auth::messages.failed')],
                 401
@@ -67,9 +67,9 @@ class AuthController
         return new JsonResponse(
             [
                 'user' => new LoginResponseDTO(
-                    $user->getAttribute('name'),
-                    $user->getAttribute('email'),
-                    $this->accessApi->getPermissionsForUser($user->getKey()),
+                    $userDto->getName(),
+                    $userDto->getEmail(),
+                    $this->accessApi->getPermissionsForUser($userDto->getId()),
                 )
             ],
             200

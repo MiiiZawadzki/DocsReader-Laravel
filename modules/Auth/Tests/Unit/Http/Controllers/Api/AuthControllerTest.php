@@ -13,6 +13,7 @@ use Modules\Auth\Http\Requests\LoginRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\Auth\Services\AuthService;
 use Modules\User\Api\UserApiInterface;
+use Modules\User\DTO\UserDTO;
 use Modules\User\Models\User;
 use Tests\Unit\UnitTestCase;
 
@@ -74,7 +75,7 @@ class AuthControllerTest extends UnitTestCase
         $userApiMock = $this->createMock(UserApiInterface::class);
         $accessApiMock = $this->createMock(AccessApiInterface::class);
         $loginRequest = $this->createMock(LoginRequest::class);
-        $user = $this->createMock(User::class);
+        $userMock = $this->createMock(User::class);
         $translatorMock = $this->createMock(Translator::class);
 
         $credentials = [
@@ -96,21 +97,22 @@ class AuthControllerTest extends UnitTestCase
             ->expects($this->once())
             ->method('regenerate');
 
-        $user
-            ->expects($this->any())
+        $userMock
+            ->expects($this->once())
             ->method('getKey')
             ->willReturn(1);
 
-        $user
-            ->expects($this->any())
+        $userMock
+            ->expects($this->exactly(2))
             ->method('getAttribute')
             ->willReturnCallback(function ($attribute) {
                 return match ($attribute) {
                     'name' => 'John Doe',
                     'email' => 'john.doe@example.com',
-                    'userPermissions' => collect(),
                 };
             });
+
+        $userDto = new UserDTO($userMock);
 
         $authService
             ->expects($this->once())
@@ -119,7 +121,7 @@ class AuthControllerTest extends UnitTestCase
                 return $dto->email === $credentials['email']
                     && $dto->password === $credentials['password'];
             }))
-            ->willReturn($user);
+            ->willReturn($userDto);
 
         $controller = new AuthController($authService, $translatorMock, $userApiMock, $accessApiMock);
         $response = $controller->login($loginRequest);

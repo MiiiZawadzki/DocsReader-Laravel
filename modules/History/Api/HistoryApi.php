@@ -16,7 +16,7 @@ class HistoryApi implements HistoryApiInterface
     /**
      * @param int $userId
      * @param array $documentIds
-     * @return Collection
+     * @return Collection<int, DocumentReadStatusDTO>
      */
     public function getReadStatusForDocuments(int $userId, array $documentIds): Collection
     {

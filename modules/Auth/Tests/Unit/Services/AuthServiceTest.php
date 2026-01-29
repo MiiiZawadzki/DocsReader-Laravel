@@ -9,6 +9,7 @@ use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
 use Modules\Auth\Services\AuthService;
 use Modules\User\Api\UserApiInterface;
+use Modules\User\DTO\UserDTO;
 use Modules\User\Models\User;
 use Tests\Unit\UnitTestCase;
 
@@ -19,7 +20,7 @@ class AuthServiceTest extends UnitTestCase
         $userApi = $this->createMock(UserApiInterface::class);
         $hasher = $this->createMock(Hasher::class);
         $auth = $this->createMock(AuthFactory::class);
-        $expectedUser = new User();
+        $expectedUserDto = $this->createMock(UserDTO::class);
 
         $hashedPassword = 'hashed-password';
         $plainPassword = 'plain-password';
@@ -48,11 +49,11 @@ class AuthServiceTest extends UnitTestCase
 
                 return true;
             }))
-            ->willReturn($expectedUser);
+            ->willReturn($expectedUserDto);
 
         $result = $authService->register($registerDto);
 
-        $this->assertSame($expectedUser, $result);
+        $this->assertSame($expectedUserDto, $result);
     }
 
     public function test_login_returns_user_when_credentials_are_valid(): void
@@ -69,7 +70,20 @@ class AuthServiceTest extends UnitTestCase
         ];
 
         $loginDto = new LoginUserDTO($credentialsData);
-        $expectedUser = new User();
+        $userMock = $this->createMock(User::class);
+
+        $userMock->expects($this->once())
+            ->method('getKey')
+            ->willReturn(1);
+
+        $userMock->expects($this->exactly(2))
+            ->method('getAttribute')
+            ->willReturnCallback(function ($attribute) {
+                return match ($attribute) {
+                    'name' => 'John Doe',
+                    'email' => 'john.doe@example.com',
+                };
+            });
 
         $auth->expects($this->once())
             ->method('guard')
@@ -82,11 +96,14 @@ class AuthServiceTest extends UnitTestCase
 
         $guard->expects($this->once())
             ->method('user')
-            ->willReturn($expectedUser);
+            ->willReturn($userMock);
 
         $result = $authService->login($loginDto);
 
-        $this->assertSame($expectedUser, $result);
+        $this->assertInstanceOf(UserDTO::class, $result);
+        $this->assertSame(1, $result->getId());
+        $this->assertSame('John Doe', $result->getName());
+        $this->assertSame('john.doe@example.com', $result->getEmail());
     }
 
     public function test_login_returns_null_when_credentials_are_invalid(): void

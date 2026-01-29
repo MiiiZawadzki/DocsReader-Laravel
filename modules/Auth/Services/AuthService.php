@@ -7,7 +7,7 @@ use Illuminate\Contracts\Hashing\Hasher;
 use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
 use Modules\User\Api\UserApiInterface;
-use Modules\User\Models\User;
+use Modules\User\DTO\UserDTO;
 
 class AuthService
 {
@@ -20,9 +20,9 @@ class AuthService
 
     /**
      * @param  RegisterDataDTO  $userData
-     * @return User
+     * @return UserDTO
      */
-    public function register(RegisterDataDTO $userData): User
+    public function register(RegisterDataDTO $userData): UserDTO
     {
         $hashedPassword = $this->generateHashedPassword($userData->plainTextPassword);
 
@@ -37,9 +37,9 @@ class AuthService
 
     /**
      * @param  LoginUserDTO  $credentials
-     * @return User|null
+     * @return UserDTO|null
      */
-    public function login(LoginUserDTO $credentials): ?User
+    public function login(LoginUserDTO $credentials): ?UserDTO
     {
         $guard = $this->auth->guard();
 
@@ -47,7 +47,9 @@ class AuthService
             return null;
         }
 
-        return $guard->user();
+        $user = $guard->user();
+
+        return new UserDTO($user);
     }
 
     /**

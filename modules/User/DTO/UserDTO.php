@@ -6,12 +6,14 @@ use Modules\User\Models\User;
 
 class UserDTO
 {
+    public int $id;
     public string $name;
     public string $email;
 //    public array $permissions;
 
     public function __construct(User $user)
     {
+        $this->id = $user->getKey();
         $this->name = $user->getAttribute('name');
         $this->email = $user->getAttribute('email');
 //        $this->permissions = $user->userPermissions
@@ -24,10 +26,19 @@ class UserDTO
     public function __toString(): string
     {
         return json_encode([
+            'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
 //            'permissions' => $this->permissions,
         ]);
+    }
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     /**

@@ -55,7 +55,13 @@ interface DocumentApiInterface
 
     /**
      * @param int $userId
-     * @return Collection
+     * @return Collection<int, DocumentDTO>
      */
     public function getManagerDocuments(int $userId): Collection;
+
+    /**
+     * @param array $documentsId
+     * @return Collection<int, DocumentDTO>
+     */
+    public function getDocumentsById(array $documentsId): Collection;
 }
