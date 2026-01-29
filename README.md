@@ -1,5 +1,7 @@
 # DocsReader API
 
+![lines](https://github.com/user-attachments/assets/6613ad3d-eecb-4ee7-9d2c-7ff480577374)
+
 This project is a backend API for the **DocsReader** app, built with the Laravel framework. The API provides all the features required by the DocsReader frontend application. The project follows a modular architecture and is currently under active development.
 
 ## Authentication
