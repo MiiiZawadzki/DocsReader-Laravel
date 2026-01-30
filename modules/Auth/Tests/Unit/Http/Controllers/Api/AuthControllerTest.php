@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Tests\Unit\Http\Controllers\Api;
 
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
 use Illuminate\Translation\Translator;
 use Modules\Access\Api\AccessApiInterface;
@@ -22,7 +21,6 @@ class AuthControllerTest extends UnitTestCase
     public function test_register_calls_service_with_register_data_dto(): void
     {
         $authService = $this->createMock(AuthService::class);
-        $sessionMock = $this->createMock(Session::class);
         $userApiMock = $this->createMock(UserApiInterface::class);
         $accessApiMock = $this->createMock(AccessApiInterface::class);
         $registerRequest = $this->createMock(RegisterRequest::class);
@@ -38,15 +36,6 @@ class AuthControllerTest extends UnitTestCase
             ->expects($this->once())
             ->method('validated')
             ->willReturn($userData);
-
-        $registerRequest
-            ->expects($this->once())
-            ->method('session')
-            ->willReturn($sessionMock);
-
-        $sessionMock
-            ->expects($this->once())
-            ->method('regenerate');
 
         $translatorMock
             ->expects($this->once())
@@ -71,7 +60,6 @@ class AuthControllerTest extends UnitTestCase
     public function test_login_calls_service_with_login_user_dto_when_credentials_are_valid(): void
     {
         $authService = $this->createMock(AuthService::class);
-        $sessionMock = $this->createMock(Session::class);
         $userApiMock = $this->createMock(UserApiInterface::class);
         $accessApiMock = $this->createMock(AccessApiInterface::class);
         $loginRequest = $this->createMock(LoginRequest::class);
@@ -87,15 +75,6 @@ class AuthControllerTest extends UnitTestCase
             ->expects($this->once())
             ->method('validated')
             ->willReturn($credentials);
-
-        $loginRequest
-            ->expects($this->once())
-            ->method('session')
-            ->willReturn($sessionMock);
-
-        $sessionMock
-            ->expects($this->once())
-            ->method('regenerate');
 
         $userMock
             ->expects($this->once())
@@ -177,24 +156,10 @@ class AuthControllerTest extends UnitTestCase
     public function test_logout_calls_service_with_user(): void
     {
         $authService = $this->createMock(AuthService::class);
-        $sessionMock = $this->createMock(Session::class);
         $userApiMock = $this->createMock(UserApiInterface::class);
         $accessApiMock = $this->createMock(AccessApiInterface::class);
         $request = $this->createMock(Request::class);
         $translatorMock = $this->createMock(Translator::class);
-
-        $request
-            ->expects($this->exactly(2))
-            ->method('session')
-            ->willReturn($sessionMock);
-
-        $sessionMock
-            ->expects($this->once())
-            ->method('invalidate');
-
-        $sessionMock
-            ->expects($this->once())
-            ->method('regenerateToken');
 
         $translatorMock
             ->expects($this->once())

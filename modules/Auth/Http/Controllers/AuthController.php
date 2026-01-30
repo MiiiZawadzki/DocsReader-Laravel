@@ -36,8 +36,6 @@ class AuthController
             ])
         );
 
-        $request->session()->regenerate();
-
         return new JsonResponse(
             ['message' => $this->translator->get('auth::messages.register_success')],
             201
@@ -62,8 +60,6 @@ class AuthController
             );
         }
 
-        $request->session()->regenerate();
-
         return new JsonResponse(
             [
                 'user' => new LoginResponseDTO(
@@ -79,9 +75,6 @@ class AuthController
     public function logout(Request $request): JsonResponse
     {
         $this->service->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
 
         return new JsonResponse(
             ['message' => $this->translator->get('auth::messages.logout_success')],
