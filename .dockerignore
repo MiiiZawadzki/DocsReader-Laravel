@@ -1,0 +1,53 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Environment & secrets (NEVER copy these into the image)
+.env
+.env.*
+!.env.example
+
+# Dependencies (will be reinstalled in the image)
+vendor
+node_modules
+
+# Build artifacts & caches
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/app/public/*
+bootstrap/cache/*.php
+
+# SQLite databases (don't ship local dev data)
+*.sqlite
+*.sqlite-journal
+database/database.sqlite
+
+# IDE & editor
+.vscode
+.idea
+*.swp
+.DS_Store
+
+# Docker itself
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Tests & dev tools
+tests
+phpunit.xml
+.phpunit.result.cache
+.phpstan.neon
+.pint.json
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Documentation
+README.md
+LICENSE
+docs
