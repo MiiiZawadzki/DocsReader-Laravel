@@ -21,6 +21,7 @@ class IndexDocumentsDataTransformer extends AbstractDocumentsDataTransformer
             "description" => $document->getAttribute('description'),
             "status" => self::getStatus($document, $readStatuses),
             "userTag" => self::getAuthorTag($document, $authorTags),
+            "authorId" => $document->getAttribute('user_id'),
             "dateTag" => $document->getAttribute('date_from')->format('Y-m-d'),
             "buttonText" => "Go to document"
         ];

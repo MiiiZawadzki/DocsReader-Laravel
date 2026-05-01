@@ -23,6 +23,7 @@ class SettingsService
         $user = $this->userRepository->findById($userId);
 
         return collect([
+            'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'date' => $user->created_at->format('Y-m-d')

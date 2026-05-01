@@ -23,6 +23,7 @@ class DocumentsHistoryDataTransformer
             "description" => $documentDto->description,
             "status" => self::getStatus($documentDto->id, $readStatuses),
             "userTag" => self::getAuthorTag($documentDto->userId, $authorTags),
+            "authorId" => $documentDto->userId,
             "dateTag" => $documentDto->dateFrom->format('Y-m-d'),
             "buttonText" => "Go to document"
         ];

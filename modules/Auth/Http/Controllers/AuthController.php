@@ -63,6 +63,7 @@ class AuthController
         return new JsonResponse(
             [
                 'user' => new LoginResponseDTO(
+                    $userDto->getId(),
                     $userDto->getName(),
                     $userDto->getEmail(),
                     $this->accessApi->getPermissionsForUser($userDto->getId()),

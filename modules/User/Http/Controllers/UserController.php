@@ -17,6 +17,7 @@ class UserController
         $permissions = $accessApi->getPermissionsForUser($currentUserId);
 
         return response()->json([
+            'id' => $userDto->getId(),
             'name' => $userDto->getName(),
             'email' => $userDto->getEmail(),
             'permissions' => $permissions,

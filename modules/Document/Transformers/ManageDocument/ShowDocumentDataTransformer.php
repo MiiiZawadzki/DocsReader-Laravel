@@ -25,6 +25,7 @@ class ShowDocumentDataTransformer
             "delay" => $document->getAttribute('delay'),
             "status" => self::getStatus($readDate),
             "userTag" => $authorTag ?? "-",
+            "authorId" => $document->getAttribute('user_id'),
             "dateTag" => $document->getAttribute('date_from')->format('Y-m-d'),
             "dateFrom" => $document->getAttribute('date_from')->format('Y-m-d'),
             "dateTo" => $document->getAttribute('date_to')?->format('Y-m-d') ?? '',
