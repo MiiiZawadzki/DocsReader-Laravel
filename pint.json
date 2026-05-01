@@ -1,0 +1,7 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "phpdoc_to_comment": false,
+        "no_superfluous_phpdoc_tags": false
+    }
+}
