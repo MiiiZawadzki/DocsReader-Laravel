@@ -5,22 +5,26 @@ namespace Modules\Document\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Modules\Document\Api\DocumentApiInterface;
+use Modules\Document\Concerns\ManagesOwnDocuments;
 
 class GetFileRequest extends FormRequest
 {
+    use ManagesOwnDocuments;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        if (!Auth::check() || !$id = $this->route('document')) {
+        if (! Auth::check() || ! $id = $this->route('document')) {
             return false;
         }
-        $documentApi = app()->make(DocumentApiInterface::class);
 
-        $isAssigned = $documentApi->verifyAssignedDocument(Auth::id(), $id);
-        $isManager = $documentApi->getManagerDocuments(Auth::id())->contains('uuid', $id);
+        if ($this->userManagesRouteDocument()) {
+            return true;
+        }
 
-        return $isAssigned || $isManager;
+        return app()->make(DocumentApiInterface::class)
+            ->verifyAssignedDocument(Auth::id(), $id);
     }
 }

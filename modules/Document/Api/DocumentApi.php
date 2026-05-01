@@ -13,13 +13,11 @@ readonly class DocumentApi implements DocumentApiInterface
 {
     public function __construct(
         private UserDocumentRepositoryInterface $userDocumentRepository,
-        private DocumentRepositoryInterface     $documentRepository
-    )
-    {
-    }
+        private DocumentRepositoryInterface $documentRepository
+    ) {}
 
     /**
-     * @param int $documentId
+     * @param  int  $documentId
      * @return int
      */
     public function getAssignedUsersCount(int $documentId): int
@@ -28,7 +26,7 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
-     * @param string $documentUuid
+     * @param  string  $documentUuid
      * @return DocumentDTO|null
      */
     public function getDocumentByUuid(string $documentUuid): ?DocumentDTO
@@ -43,27 +41,37 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
-     * @param array $documentsId
+     * @param  array  $documentsId
      * @return Collection<int, DocumentDTO>
      */
     public function getDocumentsById(array $documentsId): Collection
     {
         return $this->documentRepository->getDocumentsById($documentsId)
-            ->map(fn(Document $document) => DocumentDTO::fromModel($document));
+            ->map(fn (Document $document) => DocumentDTO::fromModel($document));
     }
 
     /**
-     * @param int $userId
+     * @param  int  $userId
      * @return Collection<int, DocumentDTO>
      */
     public function getManagerDocuments(int $userId): Collection
     {
         return $this->documentRepository->getForManager($userId)
-            ->map(fn(Document $document) => DocumentDTO::fromModel($document));
+            ->map(fn (Document $document) => DocumentDTO::fromModel($document));
     }
 
     /**
-     * @param int $userId
+     * @param  int  $userId
+     * @param  string  $documentUuid
+     * @return bool
+     */
+    public function isManagerOf(int $userId, string $documentUuid): bool
+    {
+        return $this->documentRepository->isManagedBy($documentUuid, $userId);
+    }
+
+    /**
+     * @param  int  $userId
      * @return int
      */
     public function getAssignedDocumentsCount(int $userId): int
@@ -72,8 +80,8 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
-     * @param int $userId
-     * @param string $documentUuid
+     * @param  int  $userId
+     * @param  string  $documentUuid
      * @return bool
      */
     public function verifyAssignedDocument(int $userId, string $documentUuid): bool
@@ -84,8 +92,8 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
-     * @param int $userId
-     * @param Carbon $date
+     * @param  int  $userId
+     * @param  Carbon  $date
      * @return int
      */
     public function getAssignedDocumentsCountForDate(int $userId, Carbon $date): int
@@ -94,8 +102,8 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
-     * @param int $userId
-     * @param Carbon $date
+     * @param  int  $userId
+     * @param  Carbon  $date
      * @return int
      */
     public function getCreatedDocumentsCountForDate(int $userId, Carbon $date): int
@@ -104,7 +112,7 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
-     * @param int $userId
+     * @param  int  $userId
      * @return int
      */
     public function getCreatedDocumentsCount(int $userId): int
@@ -113,7 +121,7 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
-     * @param int $userId
+     * @param  int  $userId
      * @return int
      */
     public function getUsersForCreatedDocumentsCount(int $userId): int

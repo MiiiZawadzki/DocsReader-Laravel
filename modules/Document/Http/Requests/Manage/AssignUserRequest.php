@@ -2,27 +2,23 @@
 
 namespace Modules\Document\Http\Requests\Manage;
 
-use App\Models\Document;
+use App\Concerns\AuthorizesPermissions;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
+use Modules\Document\Concerns\ManagesOwnDocuments;
 
 class AssignUserRequest extends FormRequest
 {
+    use AuthorizesPermissions;
+    use ManagesOwnDocuments;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
-        // TODO:- check for permission
-//        if (!Auth::check() || !$id = $this->route('document')) {
-//            return false;
-//        }
-//
-//        return Document::where('uuid', $id)
-//            ->forManager(Auth::user())
-//            ->exists();
+        return $this->userHasPermission('manage-documents')
+            && $this->userManagesRouteDocument();
     }
 
     /**

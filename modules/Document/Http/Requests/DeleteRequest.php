@@ -2,17 +2,21 @@
 
 namespace Modules\Document\Http\Requests;
 
+use App\Concerns\AuthorizesPermissions;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
+use Modules\Document\Concerns\ManagesOwnDocuments;
 
 class DeleteRequest extends FormRequest
 {
+    use AuthorizesPermissions;
+    use ManagesOwnDocuments;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        // TODO:- check for permission
-        return Auth::check();
+        return $this->userHasPermission('manage-documents')
+            && $this->userManagesRouteDocument();
     }
 }
