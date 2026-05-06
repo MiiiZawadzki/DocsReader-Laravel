@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Modules\Document\Api\DocumentApiInterface;
 use Modules\History\Api\HistoryApiInterface;
+use Modules\History\Events\DocumentRead as DocumentReadEvent;
 use Modules\History\Http\Requests\GetHistoryRequest;
 use Modules\History\Http\Requests\MarkReadRequest;
 use Modules\History\Models\DocumentRead;
@@ -73,6 +74,17 @@ class DocumentsHistoryController
             $userId = Auth::id();
 
             $documentRead = $this->documentReadRepository->markAsRead($documentDto->id, $userId);
+
+            if ($documentRead->wasRecentlyCreated) {
+                DocumentReadEvent::dispatch(
+                    $documentUuid,
+                    $documentDto->name,
+                    $userId,
+                    $this->userApi->getUserName($userId) ?? '',
+                    $documentRead->created_at->toIso8601String(),
+                    $this->documentReadRepository->getDocumentReadCount($documentDto->id),
+                );
+            }
 
             return response()->json([
                 'message' => __('history::messages.read.success', ['name' => $documentDto->name]),
