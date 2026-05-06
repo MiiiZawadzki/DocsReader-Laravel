@@ -6,6 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Modules\Document\DTO\UpdateDocumentDTO;
+use Modules\Document\Events\DocumentAssignmentChanged;
 use Modules\Document\Models\Document;
 use Modules\Document\Repositories\Contracts\DocumentRepositoryInterface;
 use Modules\Document\Repositories\Contracts\UserDocumentRepositoryInterface;
@@ -83,6 +84,14 @@ class ManageDocumentService
                 $userId
             );
         }
+
+        DocumentAssignmentChanged::dispatch(
+            (string) $document->getAttribute('uuid'),
+            (string) $document->getAttribute('name'),
+            $userId,
+            $assign,
+            $changedById,
+        );
     }
 
     /**

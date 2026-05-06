@@ -26,5 +26,7 @@ class UserServiceProvider extends ServiceProvider
         Route::middleware('api')
             ->prefix('api')
             ->group(__DIR__.'/../Routes/api.php');
+
+        require __DIR__.'/../Routes/channels.php';
     }
 }
