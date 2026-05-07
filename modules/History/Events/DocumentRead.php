@@ -22,9 +22,12 @@ class DocumentRead implements ShouldBroadcastNow
     ) {
     }
 
-    public function broadcastOn(): PrivateChannel
+    public function broadcastOn(): array
     {
-        return new PrivateChannel("history.documents.{$this->documentUuid}");
+        return [
+            new PrivateChannel("history.documents.{$this->documentUuid}"),
+            new PrivateChannel("users.{$this->userId}")
+        ];
     }
 
     public function broadcastAs(): string
