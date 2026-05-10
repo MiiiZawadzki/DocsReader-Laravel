@@ -22,9 +22,10 @@ interface DocumentRepositoryInterface
 
     /**
      * @param  array  $documentsId
+     * @param  string|null  $query
      * @return Collection
      */
-    public function getDocumentsById(array $documentsId): Collection;
+    public function getDocumentsById(array $documentsId, ?string $query = null): Collection;
 
     /**
      * @param  int  $userId

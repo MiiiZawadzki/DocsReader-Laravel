@@ -68,7 +68,8 @@ interface DocumentApiInterface
 
     /**
      * @param  array  $documentsId
+     * @param  string|null  $query
      * @return Collection<int, DocumentDTO>
      */
-    public function getDocumentsById(array $documentsId): Collection;
+    public function getDocumentsById(array $documentsId, ?string $query = null): Collection;
 }

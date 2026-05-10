@@ -3,66 +3,42 @@
 namespace Modules\History\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 use Modules\Document\Api\DocumentApiInterface;
-use Modules\History\Api\HistoryApiInterface;
+use Modules\History\Aggregators\HistoryListAggregator;
 use Modules\History\Events\DocumentRead as DocumentReadEvent;
 use Modules\History\Http\Requests\GetHistoryRequest;
 use Modules\History\Http\Requests\MarkReadRequest;
-use Modules\History\Models\DocumentRead;
+use Modules\History\Http\Resources\HistoryItemResource;
 use Modules\History\Repositories\DocumentReadRepository;
-use Modules\History\Transformers\DocumentsHistoryDataTransformer;
 use Modules\User\Api\UserApiInterface;
 
 class DocumentsHistoryController
 {
     public function __construct(
-        private readonly DocumentApiInterface   $documentApi,
+        private readonly DocumentApiInterface $documentApi,
         private readonly DocumentReadRepository $documentReadRepository,
-        private HistoryApiInterface             $historyApi,
-        private UserApiInterface                $userApi,
-    )
-    {
+        private readonly UserApiInterface $userApi,
+        private readonly HistoryListAggregator $historyListAggregator,
+    ) {
     }
 
     /**
-     * @param GetHistoryRequest $request
-     * @return JsonResponse
+     * @param  GetHistoryRequest  $request
+     * @return AnonymousResourceCollection
      */
-    public function data(GetHistoryRequest $request): JsonResponse
+    public function data(GetHistoryRequest $request): AnonymousResourceCollection
     {
-        try {
-            $userId = Auth::id();
+        $items = $this->historyListAggregator->getForUser(Auth::id(), $request->toFilters());
 
-            $documents = $this->documentReadRepository->getReadDocuments($userId);
-            $documentsDto = $this->documentApi->getDocumentsById($documents->pluck('document_id')->toArray());
-
-            $documentIds = $documentsDto->pluck('id')->toArray();
-            $authorIds = $documentsDto->pluck('userId')->unique()->toArray();
-
-            $readStatuses = $this->historyApi->getReadStatusForDocuments($userId, $documentIds);
-            $authorTags = $this->userApi->getUsersName($authorIds);
-
-            $result = $documents->map(
-                fn(DocumentRead $documentRead) => DocumentsHistoryDataTransformer::transform(
-                    $documentsDto->where('id', $documentRead->getAttribute('document_id'))->first(),
-                    $readStatuses,
-                    $authorTags,
-                )
-            );
-
-            return response()->json([
-                'history' => $result,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
+        return HistoryItemResource::collection($items);
     }
 
     /**
      * Mark document as read
      *
-     * @param MarkReadRequest $request
+     * @param  MarkReadRequest  $request
      * @return JsonResponse
      */
     public function markAsRead(MarkReadRequest $request): JsonResponse
@@ -90,7 +66,6 @@ class DocumentsHistoryController
                 'message' => __('history::messages.read.success', ['name' => $documentDto->name]),
                 'date' => $documentRead->created_at->format('Y-m-d'),
             ]);
-
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }

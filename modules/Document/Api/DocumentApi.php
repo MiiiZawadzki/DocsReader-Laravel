@@ -14,7 +14,8 @@ readonly class DocumentApi implements DocumentApiInterface
     public function __construct(
         private UserDocumentRepositoryInterface $userDocumentRepository,
         private DocumentRepositoryInterface $documentRepository
-    ) {}
+    ) {
+    }
 
     /**
      * @param  int  $documentId
@@ -42,12 +43,13 @@ readonly class DocumentApi implements DocumentApiInterface
 
     /**
      * @param  array  $documentsId
+     * @param  string|null  $query
      * @return Collection<int, DocumentDTO>
      */
-    public function getDocumentsById(array $documentsId): Collection
+    public function getDocumentsById(array $documentsId, ?string $query = null): Collection
     {
-        return $this->documentRepository->getDocumentsById($documentsId)
-            ->map(fn (Document $document) => DocumentDTO::fromModel($document));
+        return $this->documentRepository->getDocumentsById($documentsId, $query)
+            ->map(fn(Document $document) => DocumentDTO::fromModel($document));
     }
 
     /**
@@ -57,7 +59,7 @@ readonly class DocumentApi implements DocumentApiInterface
     public function getManagerDocuments(int $userId): Collection
     {
         return $this->documentRepository->getForManager($userId)
-            ->map(fn (Document $document) => DocumentDTO::fromModel($document));
+            ->map(fn(Document $document) => DocumentDTO::fromModel($document));
     }
 
     /**
