@@ -16,16 +16,17 @@ class DocumentService
     }
 
     /**
-     * @param int $userId
+     * @param  int  $userId
+     * @param  string|null  $query
      * @return Collection
      */
-    public function getForUser(int $userId): Collection
+    public function getForUser(int $userId, ?string $query = null): Collection
     {
-        return $this->repository->getForUser($userId);
+        return $this->repository->getForUser($userId, $query);
     }
 
     /**
-     * @param int $userId
+     * @param  int  $userId
      * @return Collection
      */
     public function getForManager(int $userId): Collection
@@ -34,7 +35,7 @@ class DocumentService
     }
 
     /**
-     * @param string $documentUuId
+     * @param  string  $documentUuId
      * @return Document
      */
     public function getDocumentByUuid(string $documentUuId): Document
@@ -43,7 +44,7 @@ class DocumentService
     }
 
     /**
-     * @param CreateDocumentDTO $dto
+     * @param  CreateDocumentDTO  $dto
      * @return Document
      */
     public function store(CreateDocumentDTO $dto): Document
@@ -68,8 +69,8 @@ class DocumentService
     }
 
     /**
-     * @param UploadedFile $file
-     * @param string $uuid
+     * @param  UploadedFile  $file
+     * @param  string  $uuid
      * @return string
      */
     private function saveFile(UploadedFile $file, string $uuid): string

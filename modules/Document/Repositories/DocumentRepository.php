@@ -22,9 +22,10 @@ class DocumentRepository implements DocumentRepositoryInterface
 
     /**
      * @param  int  $userId
+     * @param  string|null  $query
      * @return Collection
      */
-    public function getForUser(int $userId): Collection
+    public function getForUser(int $userId, ?string $query = null): Collection
     {
         $userDocumentIds = UserDocument::where('user_id', $userId)->pluck('document_id');
         $date = Carbon::today();
@@ -34,6 +35,12 @@ class DocumentRepository implements DocumentRepositoryInterface
                 $builder->whereDate('date_from', '<=', $date);
                 $builder->whereNull('date_to')
                     ->orWhereDate('date_to', '>=', $date);
+            })
+            ->when($query !== null && $query !== '', function (Builder $builder) use ($query) {
+                $builder->where(function (Builder $inner) use ($query) {
+                    $inner->where('name', 'like', '%' . $query . '%')
+                        ->orWhere('description', 'like', '%' . $query . '%');
+                });
             })
             ->get();
     }

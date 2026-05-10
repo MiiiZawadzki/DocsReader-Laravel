@@ -28,9 +28,10 @@ interface DocumentRepositoryInterface
 
     /**
      * @param  int  $userId
+     * @param  string|null  $query
      * @return Collection
      */
-    public function getForUser(int $userId): Collection;
+    public function getForUser(int $userId, ?string $query = null): Collection;
 
     /**
      * @param  int  $userId

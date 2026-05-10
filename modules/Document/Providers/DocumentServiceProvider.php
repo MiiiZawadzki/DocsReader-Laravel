@@ -24,7 +24,7 @@ class DocumentServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
 
-        $this->loadTranslationsFrom(__DIR__.'/../Lang', 'document');
+        $this->loadTranslationsFrom(__DIR__ . '/../Lang', 'document');
 
         Route::middleware('api')
             ->prefix('api')
