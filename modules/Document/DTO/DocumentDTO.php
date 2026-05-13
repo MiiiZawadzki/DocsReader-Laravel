@@ -17,7 +17,7 @@ readonly class DocumentDTO
      * @param string $filePath
      * @param Carbon $dateFrom
      * @param Carbon|null $dateTo
-     * @param string $declarationMessage
+     * @param string|null $declarationMessage
      * @param int $delay
      */
     public function __construct(
@@ -30,7 +30,7 @@ readonly class DocumentDTO
         public string $filePath,
         public Carbon $dateFrom,
         public ?Carbon $dateTo,
-        public string $declarationMessage,
+        public ?string $declarationMessage,
         public int    $delay,
     )
     {
