@@ -3,19 +3,21 @@
 namespace Modules\Document\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
+use Modules\Document\Aggregators\ManageDocumentListAggregator;
 use Modules\Document\DTO\UpdateDocumentDTO;
 use Modules\Document\Http\Requests\DeleteRequest;
 use Modules\Document\Http\Requests\Manage\AssignUserRequest;
 use Modules\Document\Http\Requests\Manage\GetUsersRequest;
+use Modules\Document\Http\Requests\Manage\IndexRequest;
 use Modules\Document\Http\Requests\Manage\ShowRequest;
 use Modules\Document\Http\Requests\UpdateRequest;
-use Modules\Document\Models\Document;
+use Modules\Document\Http\Resources\DocumentResource;
 use Modules\Document\Repositories\Contracts\DocumentRepositoryInterface;
 use Modules\Document\Repositories\Contracts\UserDocumentRepositoryInterface;
 use Modules\Document\Services\DocumentService;
 use Modules\Document\Services\ManageDocumentService;
-use Modules\Document\Transformers\IndexDocumentsDataTransformer;
 use Modules\Document\Transformers\ManageDocument\ShowDocumentDataTransformer;
 use Modules\History\Api\HistoryApiInterface;
 use Modules\User\Api\UserApiInterface;
@@ -29,6 +31,7 @@ readonly class ManageDocumentController
         private DocumentRepositoryInterface     $documentRepository,
         private UserApiInterface                $userApi,
         private HistoryApiInterface             $historyApi,
+        private ManageDocumentListAggregator    $manageDocumentListAggregator,
     )
     {
     }
@@ -36,31 +39,17 @@ readonly class ManageDocumentController
     /**
      * Display a listing of the resource.
      *
-     * @return JsonResponse
+     * @param  IndexRequest  $request
+     * @return AnonymousResourceCollection
      */
-    public function index(): JsonResponse
+    public function index(IndexRequest $request): AnonymousResourceCollection
     {
-        try {
-            $userId = Auth::id();
+        $items = $this->manageDocumentListAggregator->getForManager(
+            Auth::id(),
+            $request->input('q'),
+        );
 
-            $documents = $this->documentService->getForManager($userId);
-            $authorIds = $documents->pluck('user_id')->unique()->toArray();
-            $authorTags = $this->userApi->getUsersName($authorIds);
-
-            $result = $documents->map(
-                fn(Document $document) => IndexDocumentsDataTransformer::transform(
-                    $document,
-                    collect(),
-                    $authorTags
-                )
-            );
-
-            return response()->json([
-                'documents' => $result,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
+        return DocumentResource::collection($items);
     }
 
     /**

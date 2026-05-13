@@ -47,11 +47,19 @@ class DocumentRepository implements DocumentRepositoryInterface
 
     /**
      * @param  int  $userId
+     * @param  string|null  $query
      * @return Collection
      */
-    public function getForManager(int $userId): Collection
+    public function getForManager(int $userId, ?string $query = null): Collection
     {
-        return Document::where('user_id', $userId)->get();
+        return Document::where('user_id', $userId)
+            ->when($query !== null && $query !== '', function (Builder $builder) use ($query) {
+                $builder->where(function (Builder $inner) use ($query) {
+                    $inner->where('name', 'like', '%' . $query . '%')
+                        ->orWhere('description', 'like', '%' . $query . '%');
+                });
+            })
+            ->get();
     }
 
     /**

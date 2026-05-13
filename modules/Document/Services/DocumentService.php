@@ -27,11 +27,12 @@ class DocumentService
 
     /**
      * @param  int  $userId
+     * @param  string|null  $query
      * @return Collection
      */
-    public function getForManager(int $userId): Collection
+    public function getForManager(int $userId, ?string $query = null): Collection
     {
-        return $this->repository->getForManager($userId);
+        return $this->repository->getForManager($userId, $query);
     }
 
     /**
