@@ -5,6 +5,7 @@ namespace Modules\Document\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
+use Modules\Document\Aggregators\DocumentAssignableUsersAggregator;
 use Modules\Document\Aggregators\ManageDocumentListAggregator;
 use Modules\Document\DTO\UpdateDocumentDTO;
 use Modules\Document\Http\Requests\DeleteRequest;
@@ -13,9 +14,9 @@ use Modules\Document\Http\Requests\Manage\GetUsersRequest;
 use Modules\Document\Http\Requests\Manage\IndexRequest;
 use Modules\Document\Http\Requests\Manage\ShowRequest;
 use Modules\Document\Http\Requests\UpdateRequest;
+use Modules\Document\Http\Resources\DocumentAssignableUserResource;
 use Modules\Document\Http\Resources\DocumentResource;
 use Modules\Document\Repositories\Contracts\DocumentRepositoryInterface;
-use Modules\Document\Repositories\Contracts\UserDocumentRepositoryInterface;
 use Modules\Document\Services\DocumentService;
 use Modules\Document\Services\ManageDocumentService;
 use Modules\Document\Transformers\ManageDocument\ShowDocumentDataTransformer;
@@ -25,13 +26,13 @@ use Modules\User\Api\UserApiInterface;
 readonly class ManageDocumentController
 {
     public function __construct(
-        private DocumentService                 $documentService,
-        private ManageDocumentService           $manageDocumentService,
-        private UserDocumentRepositoryInterface $userDocumentRepository,
-        private DocumentRepositoryInterface     $documentRepository,
-        private UserApiInterface                $userApi,
-        private HistoryApiInterface             $historyApi,
-        private ManageDocumentListAggregator    $manageDocumentListAggregator,
+        private DocumentService                    $documentService,
+        private ManageDocumentService              $manageDocumentService,
+        private DocumentRepositoryInterface        $documentRepository,
+        private UserApiInterface                   $userApi,
+        private HistoryApiInterface                $historyApi,
+        private ManageDocumentListAggregator       $manageDocumentListAggregator,
+        private DocumentAssignableUsersAggregator  $documentAssignableUsersAggregator,
     )
     {
     }
@@ -104,30 +105,27 @@ readonly class ManageDocumentController
 
     /**
      * Get users for specified resource.
+     *
+     * @param  GetUsersRequest  $request
+     * @return AnonymousResourceCollection
      */
-    public function users(GetUsersRequest $request): JsonResponse
+    public function users(GetUsersRequest $request): AnonymousResourceCollection
     {
-        try {
-            $documentUuid = $request->route('document');
-            $document = $this->documentService->getDocumentByUuid($documentUuid);
+        $document = $this->documentService->getDocumentByUuid($request->route('document'));
 
-            $allUsersDto = $this->userApi->getAllUsers();
-            $assignedUserIds = $this->userDocumentRepository->getAssignedUserIds($document->getKey());
+        $result = $this->documentAssignableUsersAggregator->getForDocument(
+            document: $document,
+            query: $request->input('q'),
+            filter: $request->input('filter'),
+        );
 
-            $users = $allUsersDto->map(function ($userDto) use ($assignedUserIds) {
-                return [
-                    'id' => $userDto->id,
-                    'name' => $userDto->name,
-                    'assign' => in_array($userDto->id, $assignedUserIds),
-                ];
-            })->toArray();
-
-            return response()->json([
-                'users' => $users
+        return DocumentAssignableUserResource::collection($result->items)
+            ->additional([
+                'meta' => [
+                    'total' => $result->total,
+                    'assigned' => $result->assignedCount,
+                ],
             ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
     }
 
     /**
