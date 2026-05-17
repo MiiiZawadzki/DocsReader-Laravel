@@ -45,14 +45,14 @@ class ShowDocumentDataTransformer
         if (isset($readDate)) {
             return [
                 'read' => true,
-                'name' => __('document::messages.statuses.read'),
+                'name' => __('common::messages.statuses.read'),
                 'date' => $readDate->format('Y-m-d'),
             ];
         }
 
         return [
             "read" => false,
-            "name" => __('document::messages.statuses.new'),
+            "name" => __('common::messages.statuses.new'),
             "date" => null
         ];
     }
