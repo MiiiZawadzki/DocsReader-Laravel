@@ -3,7 +3,6 @@
 namespace Modules\Auth\Tests\Unit\Services;
 
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
-use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Hashing\Hasher;
 use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
@@ -12,6 +11,7 @@ use Modules\User\Api\UserApiInterface;
 use Modules\User\DTO\UserDTO;
 use Modules\User\Models\User;
 use Tests\Unit\UnitTestCase;
+use Tymon\JWTAuth\JWTGuard;
 
 class AuthServiceTest extends UnitTestCase
 {
@@ -42,7 +42,6 @@ class AuthServiceTest extends UnitTestCase
             ->expects($this->once())
             ->method('createUser')
             ->with($this->callback(function (array $dataArray) use ($registerDto, $hashedPassword) {
-
                 $this->assertSame($registerDto->name, $dataArray['name']);
                 $this->assertSame($registerDto->email, $dataArray['email']);
                 $this->assertSame($hashedPassword, $dataArray['password']);
@@ -56,12 +55,12 @@ class AuthServiceTest extends UnitTestCase
         $this->assertSame($expectedUserDto, $result);
     }
 
-    public function test_login_returns_user_when_credentials_are_valid(): void
+    public function test_login_returns_token_and_user_when_credentials_are_valid(): void
     {
         $userApi = $this->createMock(UserApiInterface::class);
         $hasher = $this->createMock(Hasher::class);
         $auth = $this->createMock(AuthFactory::class);
-        $guard = $this->createMock(StatefulGuard::class);
+        $guard = $this->createMock(JWTGuard::class);
         $authService = new AuthService($userApi, $hasher, $auth);
 
         $credentialsData = [
@@ -85,14 +84,15 @@ class AuthServiceTest extends UnitTestCase
                 };
             });
 
-        $auth->expects($this->once())
+        $auth->expects($this->exactly(2))
             ->method('guard')
+            ->with('jwt')
             ->willReturn($guard);
 
         $guard->expects($this->once())
             ->method('attempt')
             ->with($credentialsData)
-            ->willReturn(true);
+            ->willReturn('jwt.token.value');
 
         $guard->expects($this->once())
             ->method('user')
@@ -100,10 +100,14 @@ class AuthServiceTest extends UnitTestCase
 
         $result = $authService->login($loginDto);
 
-        $this->assertInstanceOf(UserDTO::class, $result);
-        $this->assertSame(1, $result->getId());
-        $this->assertSame('John Doe', $result->getName());
-        $this->assertSame('john.doe@example.com', $result->getEmail());
+        $this->assertIsArray($result);
+        [$token, $userDto] = $result;
+
+        $this->assertSame('jwt.token.value', $token);
+        $this->assertInstanceOf(UserDTO::class, $userDto);
+        $this->assertSame(1, $userDto->getId());
+        $this->assertSame('John Doe', $userDto->getName());
+        $this->assertSame('john.doe@example.com', $userDto->getEmail());
     }
 
     public function test_login_returns_null_when_credentials_are_invalid(): void
@@ -111,7 +115,7 @@ class AuthServiceTest extends UnitTestCase
         $userApi = $this->createMock(UserApiInterface::class);
         $hasher = $this->createMock(Hasher::class);
         $auth = $this->createMock(AuthFactory::class);
-        $guard = $this->createMock(StatefulGuard::class);
+        $guard = $this->createMock(JWTGuard::class);
         $authService = new AuthService($userApi, $hasher, $auth);
 
         $credentialsData = [
@@ -123,6 +127,7 @@ class AuthServiceTest extends UnitTestCase
 
         $auth->expects($this->once())
             ->method('guard')
+            ->with('jwt')
             ->willReturn($guard);
 
         $guard->expects($this->once())
@@ -138,24 +143,44 @@ class AuthServiceTest extends UnitTestCase
         $this->assertNull($result);
     }
 
-    public function test_logs_out_user(): void
+    public function test_logout_invalidates_token_on_jwt_guard(): void
     {
         $userApi = $this->createMock(UserApiInterface::class);
         $hasher = $this->createMock(Hasher::class);
         $auth = $this->createMock(AuthFactory::class);
         $authService = new AuthService($userApi, $hasher, $auth);
 
-        $user = $this->createMock(User::class);
-        $guard = $this->createMock(StatefulGuard::class);
+        $guard = $this->createMock(JWTGuard::class);
 
         $auth->expects($this->once())
             ->method('guard')
-            ->with('web')
+            ->with('jwt')
             ->willReturn($guard);
 
         $guard->expects($this->once())
             ->method('logout');
 
-        $authService->logout($user);
+        $authService->logout();
+    }
+
+    public function test_refresh_returns_new_token_from_jwt_guard(): void
+    {
+        $userApi = $this->createMock(UserApiInterface::class);
+        $hasher = $this->createMock(Hasher::class);
+        $auth = $this->createMock(AuthFactory::class);
+        $authService = new AuthService($userApi, $hasher, $auth);
+
+        $guard = $this->createMock(JWTGuard::class);
+
+        $auth->expects($this->once())
+            ->method('guard')
+            ->with('jwt')
+            ->willReturn($guard);
+
+        $guard->expects($this->once())
+            ->method('refresh')
+            ->willReturn('refreshed.jwt.value');
+
+        $this->assertSame('refreshed.jwt.value', $authService->refresh());
     }
 }

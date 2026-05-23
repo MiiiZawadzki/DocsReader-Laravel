@@ -12,9 +12,6 @@ use Tests\Feature\FeatureTestCase;
 #[Group('Auth')]
 class AuthControllerTest extends FeatureTestCase
 {
-    /**
-     * @return void
-     */
     public function test_register_method_with_correct_data_should_create_user(): void
     {
         $requestData = [
@@ -34,9 +31,6 @@ class AuthControllerTest extends FeatureTestCase
         ]);
     }
 
-    /**
-     * @return void
-     */
     public function test_register_method_with_incorrect_data_should_not_create_user(): void
     {
         $requestData = [
@@ -48,77 +42,107 @@ class AuthControllerTest extends FeatureTestCase
         $response = $this->postJson('/api/register', $requestData);
 
         $response->assertStatus(422);
-        $response->assertJsonFragment(['message' => "The name field is required."]);
+        $response->assertJsonFragment(['message' => 'The name field is required.']);
         $this->assertDatabaseEmpty('users');
     }
 
-    /**
-     * @return void
-     */
-    public function test_login_method_with_correct_data_should_login_user(): void
+    public function test_login_method_with_correct_data_issues_jwt_cookie(): void
     {
         $this->makeUser();
 
-        $requestData = [
+        $response = $this->postJson('/api/login', [
             'email' => 'john.doe@example.com',
             'password' => 'SecurePassword123!',
-        ];
+        ]);
 
-        $response = $this->postJson('/api/login', $requestData);
         $response->assertStatus(200);
         $response->assertJson([
             'user' => [
                 'name' => 'John Doe',
                 'email' => 'john.doe@example.com',
                 'permissions' => [],
-            ]
+            ],
         ]);
-        $this->assertAuthenticated('web');
+
+        $cookieName = config('auth_cookie.name');
+        $response->assertCookie($cookieName);
+
+        $cookie = collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === $cookieName);
+
+        $this->assertNotNull($cookie);
+        $this->assertNotEmpty($cookie->getValue());
+        $this->assertTrue($cookie->isHttpOnly());
     }
 
-    /**
-     * @return void
-     */
-    public function test_login_method_with_incorrect_data_should_not_login_user(): void
+    public function test_login_method_with_incorrect_data_returns_401_and_no_cookie(): void
     {
         $this->makeUser();
 
-        $requestData = [
+        $response = $this->postJson('/api/login', [
             'email' => 'john.doe@example.com',
             'password' => 'SecurePassword',
-        ];
-
-        $response = $this->postJson('/api/login', $requestData);
-
-        $response->assertStatus(401);
-        $response->assertJson([
-            'message' => __('auth::messages.failed')
         ]);
 
-        $this->assertGuest('web');
+        $response->assertStatus(401);
+        $response->assertJson(['message' => __('auth::messages.failed')]);
+
+        $cookieName = config('auth_cookie.name');
+        $cookie = collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === $cookieName);
+        $this->assertNull($cookie);
+
+        $this->assertGuest('jwt');
     }
 
-    /**
-     * @return void
-     */
-    public function test_logout_method_should_logout_user(): void
+    public function test_logout_method_clears_jwt_cookie(): void
     {
         $this->makeUser();
 
-        $requestData = [
+        $loginResponse = $this->postJson('/api/login', [
             'email' => 'john.doe@example.com',
             'password' => 'SecurePassword123!',
-        ];
-
-        $this->postJson('/api/login', $requestData);
-        $this->assertAuthenticated('web');
-
-        $response = $this->postJson('/api/logout');
-
-        $this->assertGuest('web');
-        $response->assertStatus(200);
-        $response->assertJson([
-            'message' => __('auth::messages.logout_success')
         ]);
+
+        $cookieName = config('auth_cookie.name');
+        $token = $loginResponse->headers->getCookies()[0]->getValue();
+
+        $response = $this
+            ->withHeader('Authorization', "Bearer $token")
+            ->postJson('/api/logout');
+
+        $response->assertStatus(200);
+        $response->assertJson(['message' => __('auth::messages.logout_success')]);
+
+        $cleared = collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === $cookieName);
+        $this->assertNotNull($cleared);
+        $this->assertEmpty($cleared->getValue());
+    }
+
+    public function test_refresh_returns_new_jwt_cookie(): void
+    {
+        $this->makeUser();
+
+        $loginResponse = $this->postJson('/api/login', [
+            'email' => 'john.doe@example.com',
+            'password' => 'SecurePassword123!',
+        ]);
+
+        $cookieName = config('auth_cookie.name');
+        $original = $loginResponse->headers->getCookies()[0]->getValue();
+
+        $response = $this
+            ->withHeader('Authorization', "Bearer $original")
+            ->postJson('/api/refresh');
+
+        $response->assertStatus(200);
+
+        $refreshed = collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === $cookieName);
+
+        $this->assertNotNull($refreshed);
+        $this->assertNotSame($original, $refreshed->getValue());
+        $this->assertTrue($refreshed->isHttpOnly());
     }
 }

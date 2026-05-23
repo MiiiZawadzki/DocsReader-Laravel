@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\User\Http\Controllers\SettingsController;
 use Modules\User\Http\Controllers\UserController;
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/user', UserController::class);
 
     Route::get('/settings', [SettingsController::class, 'data']);

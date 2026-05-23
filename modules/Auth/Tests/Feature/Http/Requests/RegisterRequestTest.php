@@ -4,6 +4,7 @@ namespace Modules\Auth\Tests\Feature\Http\Requests;
 
 use Illuminate\Support\Facades\Validator;
 use Modules\Auth\Http\Requests\RegisterRequest;
+use Modules\User\Models\User;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\Feature\FeatureTestCase;
@@ -16,22 +17,17 @@ class RegisterRequestTest extends FeatureTestCase
     public function test_request_should_not_pass_authorization_when_user_is_logged(): void
     {
         $this->makeUser();
+        $user = User::where('email', 'john.doe@example.com')->firstOrFail();
 
-        $requestData = [
+        $this->actingAs($user);
+        $this->assertAuthenticated();
+
+        $request = new RegisterRequest([
             'name' => 'John Doe',
             'email' => 'john.doe@example.com',
             'password' => 'SecurePassword123!',
             'password_confirmation' => 'SecurePassword123!',
-        ];
-
-        $this->postJson('/api/login', [
-            'email' => $requestData['email'],
-            'password' => $requestData['password'],
         ]);
-
-        $this->assertAuthenticated('web');
-
-        $request = new RegisterRequest($requestData);
 
         $this->assertFalse($request->authorize());
     }

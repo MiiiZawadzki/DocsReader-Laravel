@@ -3,6 +3,7 @@
 namespace Modules\Auth\Services;
 
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Hashing\Hasher;
 use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
@@ -12,61 +13,51 @@ use Modules\User\DTO\UserDTO;
 class AuthService
 {
     public function __construct(
-        private UserApiInterface $userApi,
-        private Hasher $hasher,
-        private AuthFactory $auth
+        private readonly UserApiInterface $userApi,
+        private readonly Hasher $hasher,
+        private readonly AuthFactory $auth,
     ) {
     }
 
-    /**
-     * @param  RegisterDataDTO  $userData
-     * @return UserDTO
-     */
     public function register(RegisterDataDTO $userData): UserDTO
     {
-        $hashedPassword = $this->generateHashedPassword($userData->plainTextPassword);
-
         return $this->userApi->createUser(
             [
                 'name' => $userData->name,
                 'email' => $userData->email,
-                'password' => $hashedPassword
+                'password' => $this->hasher->make($userData->plainTextPassword),
             ]
         );
     }
 
     /**
-     * @param  LoginUserDTO  $credentials
-     * @return UserDTO|null
+     * Returns [token, UserDTO] on success, null on bad credentials.
+     *
+     * @return array{0: string, 1: UserDTO}|null
      */
-    public function login(LoginUserDTO $credentials): ?UserDTO
+    public function login(LoginUserDTO $credentials): ?array
     {
-        $guard = $this->auth->guard();
+        $token = $this->guard()->attempt($credentials->toArray());
 
-        if (!$guard->attempt($credentials->toArray())) {
+        if (! $token) {
             return null;
         }
 
-        $user = $guard->user();
-
-        return new UserDTO($user);
+        return [$token, new UserDTO($this->guard()->user())];
     }
 
-    /**
-     * @return void
-     */
     public function logout(): void
     {
-        $this->auth->guard('web')->logout();
+        $this->guard()->logout();
     }
 
-    /**
-     * @param  string  $plainTextPassword
-     * @return string
-     */
-    protected function generateHashedPassword(string $plainTextPassword): string
+    public function refresh(): string
     {
-        return $this->hasher->make($plainTextPassword);
+        return $this->guard()->refresh();
     }
 
+    private function guard(): Guard
+    {
+        return $this->auth->guard('jwt');
+    }
 }

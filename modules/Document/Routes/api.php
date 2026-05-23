@@ -5,7 +5,7 @@ use Modules\Document\Http\Controllers\DocumentController;
 use Modules\Document\Http\Controllers\FileController;
 use Modules\Document\Http\Controllers\ManageDocumentController;
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::resource('documents', DocumentController::class);
 
     Route::get('/manage/documents', [ManageDocumentController::class, 'index']);

@@ -24,15 +24,12 @@ class AuthServiceTest extends FeatureTestCase
         $this->authService = app()->make(AuthService::class);
     }
 
-    /**
-     * @return void
-     */
     public function test_register_method_should_create_user(): void
     {
         $userData = [
             'name' => fake()->name,
             'email' => fake()->email,
-            'password' => fake()->password
+            'password' => fake()->password,
         ];
 
         $userDataDto = new RegisterDataDTO($userData);
@@ -49,35 +46,32 @@ class AuthServiceTest extends FeatureTestCase
         ]);
     }
 
-    /**
-     * @return void
-     */
-    public function test_login_method_should_login_user(): void
+    public function test_login_method_returns_token_and_user_dto(): void
     {
         $user = $this->makeUser();
-
-        $this->assertGuest();
 
         $loginData = new LoginUserDTO([
             'email' => 'john.doe@example.com',
             'password' => 'SecurePassword123!',
         ]);
 
-        $response = $this->authService->login($loginData);
+        $result = $this->authService->login($loginData);
 
-        $this->assertInstanceOf(UserDTO::class, $response);
-        $this->assertSame($user->name, $response->name);
-        $this->assertSame($user->email, $response->email);
+        $this->assertIsArray($result);
+        [$token, $userDto] = $result;
 
-        $this->assertAuthenticated();
+        $this->assertIsString($token);
+        $this->assertNotEmpty($token);
+        $this->assertInstanceOf(UserDTO::class, $userDto);
+        $this->assertSame($user->name, $userDto->name);
+        $this->assertSame($user->email, $userDto->email);
+
+        $this->assertAuthenticated('jwt');
     }
 
-    /**
-     * @return void
-     */
     public function test_login_method_should_return_null_when_user_not_exist(): void
     {
-        $this->assertGuest();
+        $this->assertGuest('jwt');
 
         $loginData = new LoginUserDTO([
             'email' => 'john.doe@example.com',
@@ -87,17 +81,14 @@ class AuthServiceTest extends FeatureTestCase
         $response = $this->authService->login($loginData);
 
         $this->assertNull($response);
-        $this->assertGuest();
+        $this->assertGuest('jwt');
     }
 
-    /**
-     * @return void
-     */
     public function test_login_method_should_return_null_when_wrong_email(): void
     {
         $this->makeUser();
 
-        $this->assertGuest();
+        $this->assertGuest('jwt');
 
         $loginData = new LoginUserDTO([
             'email' => 'john.doe@example.comm',
@@ -107,17 +98,14 @@ class AuthServiceTest extends FeatureTestCase
         $response = $this->authService->login($loginData);
 
         $this->assertNull($response);
-        $this->assertGuest();
+        $this->assertGuest('jwt');
     }
 
-    /**
-     * @return void
-     */
     public function test_login_method_should_return_null_when_wrong_password(): void
     {
         $this->makeUser();
 
-        $this->assertGuest();
+        $this->assertGuest('jwt');
 
         $loginData = new LoginUserDTO([
             'email' => 'john.doe@example.com',
@@ -127,29 +115,6 @@ class AuthServiceTest extends FeatureTestCase
         $response = $this->authService->login($loginData);
 
         $this->assertNull($response);
-        $this->assertGuest();
-    }
-
-    /**
-     * @return void
-     */
-    public function test_logout_method_should_logout_current_user(): void
-    {
-        $this->makeUser();
-
-        $this->assertGuest();
-
-        $loginData = new LoginUserDTO([
-            'email' => 'john.doe@example.com',
-            'password' => 'SecurePassword123!',
-        ]);
-
-        $this->authService->login($loginData);
-
-        $this->assertAuthenticated();
-
-        $this->authService->logout();
-
-        $this->assertGuest();
+        $this->assertGuest('jwt');
     }
 }

@@ -5,7 +5,7 @@ use Modules\Analytics\Http\Controllers\DocumentStatisticsController;
 use Modules\Analytics\Http\Controllers\ManageStatisticsController;
 use Modules\Analytics\Http\Controllers\UserStatisticsController;
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::prefix('statistics')->name('statistics.')->group(function () {
 
         Route::prefix('user')->name('user.')->group(function () {
