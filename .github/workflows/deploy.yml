@@ -1,4 +1,4 @@
-name: Deploy API
+name: Build & GitOps Bump
 
 on:
   push:
@@ -12,7 +12,10 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: docsreader-laravel
-  NAMESPACE: docsreader
+  # The container image NAME (no tag) that Argo CD's Kustomize image override
+  # matches against in DocsReader-GitOps/k8s/kustomization.yaml.
+  KUSTOMIZE_IMAGE_NAME: ghcr.io/miiizawadzki/docsreader-laravel
+  GITOPS_REPO: git@github.com:MiiiZawadzki/DocsReader-GitOps.git
 
 jobs:
   deploy:
@@ -54,31 +57,42 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Configure kubeconfig
+      # ── GitOps write-back: tell DocsReader-GitOps about the new tag ──
+      - name: Configure SSH for gitops repo
         run: |
-          mkdir -p ~/.kube
-          printf '%s' "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
-          kubectl version --client
-          kubectl -n "$NAMESPACE" get deploy api reverb >/dev/null
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GITOPS_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Roll out API and Reverb
+      - name: Install kustomize
         run: |
-          IMG="${{ env.IMAGE }}:${{ github.sha }}"
-          echo "Deploying $IMG"
-          kubectl -n "$NAMESPACE" set image deployment/api    api=$IMG
-          kubectl -n "$NAMESPACE" set image deployment/reverb reverb=$IMG
-          kubectl -n "$NAMESPACE" rollout status deployment/api    --timeout=300s
-          kubectl -n "$NAMESPACE" rollout status deployment/reverb --timeout=300s
+          curl -sSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" \
+            | tar -xz -C /tmp
+          sudo mv /tmp/kustomize /usr/local/bin/kustomize
+          kustomize version
 
-      - name: Diagnostics on failure
-        if: failure()
+      - name: Bump image tag in DocsReader-GitOps
         run: |
-          kubectl -n "$NAMESPACE" get pods -o wide || true
-          kubectl -n "$NAMESPACE" describe deployment/api    || true
-          kubectl -n "$NAMESPACE" logs deployment/api    --tail=200 --all-containers || true
-          kubectl -n "$NAMESPACE" describe deployment/reverb || true
-          kubectl -n "$NAMESPACE" logs deployment/reverb --tail=200 --all-containers || true
+          git clone "$GITOPS_REPO" gitops
+          cd gitops/k8s
+          kustomize edit set image "${KUSTOMIZE_IMAGE_NAME}=${IMAGE}:${{ github.sha }}"
+          git config user.email "ci@github-actions"
+          git config user.name  "GitHub Actions (DocsReader-Laravel)"
+          git add kustomization.yaml
+          if git diff --cached --quiet; then
+            echo "kustomization.yaml unchanged — nothing to commit"
+            exit 0
+          fi
+          git commit -m "deploy(api): bump to ${GITHUB_SHA:0:7}"
+          # Retry-on-conflict: the frontend workflow may push concurrently.
+          for i in 1 2 3 4 5; do
+            if git push origin main; then
+              echo "Pushed on attempt $i"
+              exit 0
+            fi
+            echo "Push rejected on attempt $i, rebasing and retrying…"
+            git pull --rebase origin main
+          done
+          echo "Failed to push after 5 attempts"
+          exit 1
