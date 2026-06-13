@@ -9,11 +9,12 @@ use Modules\Document\DTO\CreateDocumentDTO;
 use Modules\Document\Models\Document;
 use Modules\Document\Repositories\Contracts\DocumentRepositoryInterface;
 
-class DocumentService
+readonly class DocumentService
 {
-    public function __construct(private readonly DocumentRepositoryInterface $repository)
-    {
-    }
+    public function __construct(
+        private DocumentRepositoryInterface $repository,
+        private PdfMetadataExtractor $pdfMetadataExtractor,
+    ) {}
 
     /**
      * @param  int  $userId
@@ -62,6 +63,7 @@ class DocumentService
             'description' => $dataArray['description'],
             'user_id' => $dataArray['user_id'],
             'file_path' => "/{$path}",
+            'total_pages' => $this->pdfMetadataExtractor->countPages($path),
             'date_from' => $dataArray['date_from'],
             'date_to' => $dataArray['date_to'],
             'declaration_message' => $dataArray['declaration'],

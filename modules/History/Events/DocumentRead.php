@@ -19,14 +19,15 @@ class DocumentRead implements ShouldBroadcastNow
         public readonly string $userName,
         public readonly string $readAt,
         public readonly int $totalReadCount,
-    ) {
-    }
+        public readonly int $totalActiveSeconds = 0,
+        public readonly int $pagesViewed = 0,
+    ) {}
 
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel("history.documents.{$this->documentUuid}"),
-            new PrivateChannel("users.{$this->userId}")
+            new PrivateChannel("users.{$this->userId}"),
         ];
     }
 
@@ -44,6 +45,8 @@ class DocumentRead implements ShouldBroadcastNow
             'userName' => $this->userName,
             'readAt' => $this->readAt,
             'totalReadCount' => $this->totalReadCount,
+            'totalActiveSeconds' => $this->totalActiveSeconds,
+            'pagesViewed' => $this->pagesViewed,
         ];
     }
 }

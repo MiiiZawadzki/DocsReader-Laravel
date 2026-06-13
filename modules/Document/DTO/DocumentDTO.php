@@ -8,33 +8,33 @@ use Modules\Document\Models\Document;
 readonly class DocumentDTO
 {
     /**
-     * @param int $id
-     * @param string $name
-     * @param string $uuid
-     * @param string $sourceName
-     * @param string $description
-     * @param int $userId
-     * @param string $filePath
-     * @param Carbon $dateFrom
-     * @param Carbon|null $dateTo
-     * @param string|null $declarationMessage
-     * @param int $delay
+     * @param  int  $id
+     * @param  string  $name
+     * @param  string  $uuid
+     * @param  string  $sourceName
+     * @param  string  $description
+     * @param  int  $userId
+     * @param  string  $filePath
+     * @param  Carbon  $dateFrom
+     * @param  Carbon|null  $dateTo
+     * @param  string|null  $declarationMessage
+     * @param  int  $delay
+     * @param  int|null  $totalPages
      */
     public function __construct(
-        public int    $id,
-        public string $name,
-        public string $uuid,
-        public string $sourceName,
-        public string $description,
-        public int    $userId,
-        public string $filePath,
-        public Carbon $dateFrom,
+        public int     $id,
+        public string  $name,
+        public string  $uuid,
+        public string  $sourceName,
+        public string  $description,
+        public int     $userId,
+        public string  $filePath,
+        public Carbon  $dateFrom,
         public ?Carbon $dateTo,
         public ?string $declarationMessage,
-        public int    $delay,
-    )
-    {
-    }
+        public int     $delay,
+        public ?int    $totalPages = null,
+    ) {}
 
     public static function fromModel(Document $document): self
     {
@@ -50,6 +50,7 @@ readonly class DocumentDTO
             dateTo: $document->getAttribute('date_to'),
             declarationMessage: $document->getAttribute('declaration_message'),
             delay: $document->getAttribute('delay'),
+            totalPages: $document->getAttribute('total_pages'),
         );
     }
 }

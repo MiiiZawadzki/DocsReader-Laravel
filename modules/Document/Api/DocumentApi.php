@@ -89,6 +89,9 @@ readonly class DocumentApi implements DocumentApiInterface
     public function verifyAssignedDocument(int $userId, string $documentUuid): bool
     {
         $document = $this->documentRepository->getByUuid($documentUuid);
+        if ($document === null) {
+            return false;
+        }
 
         return $this->userDocumentRepository->getAssignedDocuments($userId)->contains('document_id', $document->id);
     }

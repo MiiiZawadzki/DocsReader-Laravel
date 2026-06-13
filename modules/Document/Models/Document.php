@@ -21,12 +21,12 @@ class Document extends Model
         'description',
         'user_id',
         'file_path',
+        'total_pages',
         'date_from',
         'date_to',
         'declaration_message',
         'delay',
     ];
-
 
     /**
      * Get the attributes that should be cast.
@@ -41,6 +41,7 @@ class Document extends Model
             'date_from' => 'datetime',
             'date_to' => 'datetime',
             'delay' => 'integer',
+            'total_pages' => 'integer',
         ];
     }
 }

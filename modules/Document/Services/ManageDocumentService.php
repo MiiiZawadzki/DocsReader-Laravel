@@ -15,13 +15,12 @@ class ManageDocumentService
 {
     public function __construct(
         private readonly DocumentRepositoryInterface $repository,
-        private readonly UserDocumentRepositoryInterface $userDocumentRepository
-    )
-    {
-    }
+        private readonly UserDocumentRepositoryInterface $userDocumentRepository,
+        private readonly PdfMetadataExtractor $pdfMetadataExtractor,
+    ) {}
 
     /**
-     * @param int $userId
+     * @param  int  $userId
      * @return Collection
      */
     public function getForManager(int $userId): Collection
@@ -30,7 +29,7 @@ class ManageDocumentService
     }
 
     /**
-     * @param UpdateDocumentDTO $dto
+     * @param  UpdateDocumentDTO  $dto
      * @return Document
      */
     public function update(UpdateDocumentDTO $dto): Document
@@ -54,6 +53,7 @@ class ManageDocumentService
 
             $updateData['source_name'] = $file->getClientOriginalName();
             $updateData['file_path'] = "/$path";
+            $updateData['total_pages'] = $this->pdfMetadataExtractor->countPages($path);
 
             if ($oldFilePath) {
                 Storage::disk('documents')->delete($oldFilePath);
@@ -64,10 +64,10 @@ class ManageDocumentService
     }
 
     /**
-     * @param Document $document
-     * @param int $userId
-     * @param bool $assign
-     * @param int $changedById
+     * @param  Document  $document
+     * @param  int  $userId
+     * @param  bool  $assign
+     * @param  int  $changedById
      * @return void
      */
     public function assignUser(Document $document, int $userId, bool $assign, int $changedById): void
@@ -95,8 +95,8 @@ class ManageDocumentService
     }
 
     /**
-     * @param UploadedFile $file
-     * @param string $uuid
+     * @param  UploadedFile  $file
+     * @param  string  $uuid
      * @return string
      */
     private function updateFile(UploadedFile $file, string $uuid): string

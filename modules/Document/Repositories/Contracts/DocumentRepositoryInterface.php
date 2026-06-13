@@ -16,9 +16,9 @@ interface DocumentRepositoryInterface
 
     /**
      * @param  string  $documentUuid
-     * @return Document
+     * @return Document|null
      */
-    public function getByUuid(string $documentUuid): Document;
+    public function getByUuid(string $documentUuid): ?Document;
 
     /**
      * @param  array  $documentsId

@@ -76,9 +76,9 @@ class DocumentRepository implements DocumentRepositoryInterface
 
     /**
      * @param  string  $documentUuid
-     * @return Document
+     * @return Document|null
      */
-    public function getByUuid(string $documentUuid): Document
+    public function getByUuid(string $documentUuid): ?Document
     {
         return Document::where('uuid', $documentUuid)->first();
     }

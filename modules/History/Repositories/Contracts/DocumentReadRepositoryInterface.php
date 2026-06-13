@@ -8,11 +8,20 @@ use Modules\History\Models\DocumentRead;
 interface DocumentReadRepositoryInterface
 {
     /**
-     * @param int $documentId
-     * @param int $userId
+     * @param  int  $documentId
+     * @param  int  $userId
+     * @param  int|null  $sessionId
+     * @param  int|null  $totalActiveSeconds
+     * @param  int|null  $pagesViewedCount
      * @return DocumentRead
      */
-    public function markAsRead(int $documentId, int $userId): DocumentRead;
+    public function markAsRead(
+        int $documentId,
+        int $userId,
+        ?int $sessionId = null,
+        ?int $totalActiveSeconds = null,
+        ?int $pagesViewedCount = null,
+    ): DocumentRead;
 
     /**
      * @param int $userId
@@ -51,4 +60,21 @@ interface DocumentReadRepositoryInterface
      * @return int
      */
     public function getDocumentsReadCount(array $documentsId): int;
+
+    /**
+     * @param  int  $documentId
+     * @param  int|null  $skimThreshold
+     * @return array
+     */
+    public function aggregateConfirmedStatsForDocument(int $documentId, ?int $skimThreshold = null): array;
+
+    /**
+     * For each confirmed user on this document, return their confirmation
+     * timestamp and the session id that did the confirming.
+     *
+     * @param  int  $documentId
+     * @param  array<int>  $userIds
+     * @return array<int, array{confirmedAt: ?string, sessionId: ?int}>
+     */
+    public function confirmedReadsByUser(int $documentId, array $userIds): array;
 }

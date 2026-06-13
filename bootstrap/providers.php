@@ -10,4 +10,5 @@ return [
     \Modules\Document\Providers\DocumentServiceProvider::class,
     \Modules\Analytics\Providers\AnalyticsServiceProvider::class,
     \Modules\Common\Providers\CommonServiceProvider::class,
+    \Modules\Engagement\Providers\EngagementServiceProvider::class
 ];

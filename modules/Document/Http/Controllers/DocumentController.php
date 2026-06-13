@@ -33,9 +33,15 @@ readonly class DocumentController
      */
     public function index(IndexRequest $request): AnonymousResourceCollection
     {
-        $items = $this->documentListAggregator->getForUser(Auth::id(), $request->toFilters());
+        $filters = $request->toFilters();
+        $userId = Auth::id();
 
-        return DocumentResource::collection($items);
+        $items = $this->documentListAggregator->getForUser($userId, $filters);
+
+        return DocumentResource::collection($items)
+            ->additional([
+                'counts' => $this->documentListAggregator->countsForUser($userId, $filters->query),
+            ]);
     }
 
     /**
@@ -80,7 +86,8 @@ readonly class DocumentController
             $documentData = ShowDocumentDataTransformer::transform(
                 $document,
                 $readStatus->createdAt,
-                $authorTag
+                $authorTag,
+                $readStatus->certificateId,
             );
 
             return response()->json([

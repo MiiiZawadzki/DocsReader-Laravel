@@ -50,4 +50,27 @@ readonly class DocumentListAggregator
             authorTag: $authorTags->get($document->getAttribute('user_id')) ?? '-',
         ));
     }
+
+    /**
+     * Segment counts for the current search query, across all read statuses
+     *
+     * @param  int  $userId
+     * @param  string|null  $query
+     * @return array{all: int, read: int, unread: int}
+     */
+    public function countsForUser(int $userId, ?string $query): array
+    {
+        $documents = $this->documentService->getForUser($userId, $query);
+
+        $readByDocumentId = $this->historyApi
+            ->getReadStatusForDocuments($userId, $documents->pluck('id')->toArray())
+            ->keyBy('documentId');
+
+        $all = $documents->count();
+        $read = $documents
+            ->filter(fn(Document $document) => $readByDocumentId->has($document->getKey()))
+            ->count();
+
+        return ['all' => $all, 'read' => $read, 'unread' => $all - $read];
+    }
 }

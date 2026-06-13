@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Analytics\Http\Controllers\DocumentEngagementController;
 use Modules\Analytics\Http\Controllers\DocumentStatisticsController;
 use Modules\Analytics\Http\Controllers\ManageStatisticsController;
 use Modules\Analytics\Http\Controllers\UserStatisticsController;
@@ -31,6 +32,12 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/ratio',    [DocumentStatisticsController::class, 'documentReadRatio'])->name('ratio');
                 Route::get('/charts',   [DocumentStatisticsController::class, 'charts'])->name('charts');
                 Route::get('/read',     [DocumentStatisticsController::class, 'readStatistics'])->name('read');
+
+                Route::prefix('engagement')->name('engagement.')->group(function () {
+                    Route::get('/summary',  [DocumentEngagementController::class, 'summary'])->name('summary');
+                    Route::get('/heatmap',  [DocumentEngagementController::class, 'heatmap'])->name('heatmap');
+                    Route::get('/sessions', [DocumentEngagementController::class, 'sessions'])->name('sessions');
+                });
             });
         });
     });
