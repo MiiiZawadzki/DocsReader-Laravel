@@ -14,7 +14,7 @@ class Document extends Model
      *
      * @var list<string>
      */
-    protected $fillable = [
+        protected $fillable = [
         'name',
         'uuid',
         'source_name',
@@ -26,6 +26,7 @@ class Document extends Model
         'date_to',
         'declaration_message',
         'delay',
+        'requires_confirmation',
     ];
 
     /**
@@ -42,6 +43,7 @@ class Document extends Model
             'date_to' => 'datetime',
             'delay' => 'integer',
             'total_pages' => 'integer',
+            'requires_confirmation' => 'boolean',
         ];
     }
 }

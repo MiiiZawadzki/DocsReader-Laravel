@@ -25,7 +25,7 @@ class ShowDocumentDataTransformer
             'name' => $document->getAttribute('name'),
             'description' => $document->getAttribute('description'),
             'declaration' => $document->getAttribute('declaration_message'),
-            'hasDeclaration' => ! empty($document->getAttribute('declaration_message')),
+            'requiresConfirmation' => $document->getAttribute('requires_confirmation') ?? false,
             'delay' => $document->getAttribute('delay'),
             'status' => self::getStatus($readDate),
             'userTag' => $authorTag ?? '-',

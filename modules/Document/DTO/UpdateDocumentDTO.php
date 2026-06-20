@@ -28,6 +28,7 @@ readonly class UpdateDocumentDTO
         $baseData = $this->request->only([
             'title',
             'description',
+            'requires_confirmation',
             'declaration',
             'delay',
             'date_from',

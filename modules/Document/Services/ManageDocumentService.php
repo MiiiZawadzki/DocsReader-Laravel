@@ -43,6 +43,7 @@ class ManageDocumentService
             'description' => $formData['description'],
             'date_from' => $formData['date_from'],
             'date_to' => $formData['date_to'],
+            'requires_confirmation' => filter_var($formData['requires_confirmation'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'declaration_message' => $formData['declaration'],
             'delay' => $formData['delay'],
         ];

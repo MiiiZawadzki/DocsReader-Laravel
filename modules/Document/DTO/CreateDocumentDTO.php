@@ -25,6 +25,7 @@ class CreateDocumentDTO
         return $this->request->only([
             'title',
             'description',
+            'requires_confirmation',
             'declaration',
             'delay',
             'date_from',
@@ -42,6 +43,10 @@ class CreateDocumentDTO
     {
         $data = $this->getFormData();
         $data['user_id'] = $this->userId;
+        $data['requires_confirmation'] = filter_var(
+            $data['requires_confirmation'] ?? false,
+            FILTER_VALIDATE_BOOLEAN
+        );
 
         return $data;
     }

@@ -28,6 +28,7 @@ class StoreRequest extends FormRequest
         return [
             'title' => 'required|string',
             'description' => 'string|nullable',
+            'requires_confirmation' => 'required|boolean',
             'declaration' => 'string|nullable',
             'delay' => 'required|int',
             'date_from' => 'required|date',

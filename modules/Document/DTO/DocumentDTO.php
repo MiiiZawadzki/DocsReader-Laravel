@@ -20,6 +20,7 @@ readonly class DocumentDTO
      * @param  string|null  $declarationMessage
      * @param  int  $delay
      * @param  int|null  $totalPages
+     * @param  bool  $requiresConfirmation
      */
     public function __construct(
         public int     $id,
@@ -34,6 +35,7 @@ readonly class DocumentDTO
         public ?string $declarationMessage,
         public int     $delay,
         public ?int    $totalPages = null,
+        public bool    $requiresConfirmation = false,
     ) {}
 
     public static function fromModel(Document $document): self
@@ -51,6 +53,7 @@ readonly class DocumentDTO
             declarationMessage: $document->getAttribute('declaration_message'),
             delay: $document->getAttribute('delay'),
             totalPages: $document->getAttribute('total_pages'),
+            requiresConfirmation: $document->getAttribute('requires_confirmation') ?? false,
         );
     }
 }

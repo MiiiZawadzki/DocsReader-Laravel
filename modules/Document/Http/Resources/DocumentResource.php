@@ -31,6 +31,7 @@ class DocumentResource extends JsonResource
             'userTag' => $item->authorTag,
             'authorId' => $document->getAttribute('user_id'),
             'dateTag' => $document->getAttribute('date_from')->format('Y-m-d'),
+            'requiresConfirmation' => $document->getAttribute('requires_confirmation') ?? false,
             'buttonText' => 'Go to document',
         ];
     }

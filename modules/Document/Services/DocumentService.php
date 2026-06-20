@@ -66,6 +66,7 @@ readonly class DocumentService
             'total_pages' => $this->pdfMetadataExtractor->countPages($path),
             'date_from' => $dataArray['date_from'],
             'date_to' => $dataArray['date_to'],
+            'requires_confirmation' => $dataArray['requires_confirmation'] ?? false,
             'declaration_message' => $dataArray['declaration'],
             'delay' => $dataArray['delay'],
         ]);
