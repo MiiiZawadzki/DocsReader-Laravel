@@ -43,8 +43,10 @@ class UserDocumentRepository implements UserDocumentRepositoryInterface
         return UserDocument::where('user_id', $userId)
             ->whereHas('document', function (Builder $builder) use ($date) {
                 $builder->whereDate('date_from', '<=', $date);
-                $builder->whereNull('date_to')
-                    ->orWhereDate('date_to', '>=', $date);
+                $builder->where(function (Builder $inner) use ($date) {
+                    $inner->whereNull('date_to')
+                        ->orWhereDate('date_to', '>=', $date);
+                });
             })
             ->pluck('document_id')
             ->toArray();
