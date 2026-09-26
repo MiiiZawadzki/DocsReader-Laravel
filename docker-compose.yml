@@ -1,0 +1,73 @@
+name: docsreader
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: docsreader
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      # 3307 on the host so this never fights a native MySQL on 3306.
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      target: dev
+    restart: unless-stopped
+    ports:
+      - "8000:8080"
+    environment:
+      LOCAL_DEV: "1"
+      # Xdebug stays off unless: XDEBUG_MODE=debug docker compose up api
+      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+    volumes:
+      # Live source
+      - .:/var/www/html:cached
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/up"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      # First boot runs migrations (and composer install on a fresh clone).
+      start_period: 120s
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  reverb:
+    build:
+      context: .
+      target: dev
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8082
+    ports:
+      - "8082:8082"
+    environment:
+      LOCAL_DEV: "1"
+      # Only the api service owns migrations.
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - .:/var/www/html:cached
+    depends_on:
+      mysql:
+        condition: service_healthy
+      # Reverb must not start until the api service has finished migrating.
+      api:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
