@@ -17,4 +17,19 @@ class AccessRepository implements AccessRepositoryInterface
     {
         return Permission::whereIn('id', $permissionsId)->get()->toArray();
     }
+
+    public function getPermissionByType(string $type): ?array
+    {
+        return Permission::where('type', $type)->first()?->toArray();
+    }
+
+    public function grantPermission(int $userId, int $permissionId): bool
+    {
+        $userPermission = UserPermission::firstOrCreate([
+            'user_id' => $userId,
+            'permission_id' => $permissionId,
+        ]);
+
+        return $userPermission->wasRecentlyCreated;
+    }
 }

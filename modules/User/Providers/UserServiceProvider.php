@@ -5,6 +5,7 @@ namespace Modules\User\Providers;
 use Illuminate\Support\ServiceProvider;
 use Modules\User\Api\UserApi;
 use Modules\User\Api\UserApiInterface;
+use Modules\User\Console\Commands\CreateAdminUser;
 use Modules\User\Repositories\Contracts\UserRepositoryInterface;
 use Modules\User\Repositories\UserRepository;
 use Route;
@@ -28,5 +29,11 @@ class UserServiceProvider extends ServiceProvider
             ->group(__DIR__.'/../Routes/api.php');
 
         require __DIR__.'/../Routes/channels.php';
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                CreateAdminUser::class,
+            ]);
+        }
     }
 }
