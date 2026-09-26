@@ -19,7 +19,23 @@ abstract class FeatureTestCase extends TestCase
     {
         parent::setUp();
 
+        $this->assertRunningAgainstTestDatabase();
+
         $this->userApi = app()->make(UserApiInterface::class);
+    }
+
+    private function assertRunningAgainstTestDatabase(): void
+    {
+        $connection = config('database.default');
+        $database = config('database.connections.'.$connection.'.database');
+
+        if ($connection !== 'sqlite' || $database !== ':memory:') {
+            $this->fail(sprintf(
+                'Refusing to run tests against %s/%s -- expected sqlite/:memory:. ',
+                $connection,
+                var_export($database, true)
+            ));
+        }
     }
 
     /**
