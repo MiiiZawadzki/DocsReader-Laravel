@@ -2,7 +2,6 @@
 
 namespace Modules\Access\Models;
 
-use App\Models\Permission;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
