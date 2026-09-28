@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "664f528cc5138e545141963c065cac79",
+    "content-hash": "2ee0d5f14bfad258c977a9c02219f78e",
     "packages": [
         {
             "name": "brick/math",
@@ -339,6 +339,40 @@
                 "source": "https://github.com/dflydev/dflydev-dot-access-data/tree/v3.0.3"
             },
             "time": "2024-07-08T12:26:09+00:00"
+        },
+        {
+            "name": "docsreader/demo-seeder",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/demo-seeder",
+                "reference": "7d8dd4e637f25c8d1e59c239543faca1b98c7ba1"
+            },
+            "require": {
+                "illuminate/console": "^11.0",
+                "illuminate/support": "^11.0",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "DocsReader\\DemoSeeder\\DemoSeederServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "DocsReader\\DemoSeeder\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Seeds a demo company with staff, documents and reading history for local testing",
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "doctrine/inflector",

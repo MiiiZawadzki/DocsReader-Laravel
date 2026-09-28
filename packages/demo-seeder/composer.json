@@ -1,0 +1,25 @@
+{
+    "name": "docsreader/demo-seeder",
+    "description": "Seeds a demo company with staff, documents and reading history for testing",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "illuminate/console": "^11.0",
+        "illuminate/support": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "DocsReader\\DemoSeeder\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DocsReader\\DemoSeeder\\DemoSeederServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable"
+}
