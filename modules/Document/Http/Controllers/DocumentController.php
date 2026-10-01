@@ -62,7 +62,9 @@ readonly class DocumentController
                 ),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -94,7 +96,9 @@ readonly class DocumentController
                 'document' => $documentData,
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 }

@@ -44,7 +44,9 @@ class DocumentStatisticsController
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -65,7 +67,9 @@ class DocumentStatisticsController
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -83,7 +87,9 @@ class DocumentStatisticsController
                 'chart_data' => $this->service->readStatistics($documentDto->id),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -101,7 +107,9 @@ class DocumentStatisticsController
                 'value' => $this->service->documentReads($documentDto->id),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -119,7 +127,9 @@ class DocumentStatisticsController
                 'value' => $this->service->documentAssignment($documentDto->id),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -137,7 +147,9 @@ class DocumentStatisticsController
                 'value' => $this->service->documentReadRatio($documentDto->id),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 }

@@ -32,7 +32,9 @@ class ManageStatisticsController
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -50,7 +52,9 @@ class ManageStatisticsController
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -66,7 +70,9 @@ class ManageStatisticsController
                 'chart_data' => $this->service->readStatistics($userId),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -83,7 +89,9 @@ class ManageStatisticsController
                 'value' => $this->service->activeDocuments($userId, $date),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -99,7 +107,9 @@ class ManageStatisticsController
                 'value' => $this->service->totalDocuments($userId),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 }

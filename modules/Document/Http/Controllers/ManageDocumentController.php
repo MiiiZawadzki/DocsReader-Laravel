@@ -80,7 +80,9 @@ readonly class ManageDocumentController
                 'document' => $documentData,
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -99,7 +101,9 @@ readonly class ManageDocumentController
                 'message' => __('document::messages.update.success', ['name' => $document->getAttribute('name')]),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -152,7 +156,9 @@ readonly class ManageDocumentController
                 'message' => __('document::messages.manage.userAssignment.success')
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -170,7 +176,9 @@ readonly class ManageDocumentController
                 'message' => __('document::messages.manage.delete.success')
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 }

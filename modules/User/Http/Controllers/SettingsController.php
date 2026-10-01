@@ -27,7 +27,9 @@ class SettingsController
                 'user' => $this->settingsService->data($userId),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -47,7 +49,9 @@ class SettingsController
                 'message' => __('user::messages.settings.update.success'),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -67,7 +71,9 @@ class SettingsController
                 'message' => __('user::messages.settings.update.success'),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 
@@ -87,7 +93,9 @@ class SettingsController
                 'message' => __('user::messages.settings.update.success'),
             ]);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            report($e);
+
+            return response()->json(['message' => __('common::messages.errors.unexpected')], 500);
         }
     }
 }
