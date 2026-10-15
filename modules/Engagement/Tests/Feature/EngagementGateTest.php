@@ -23,15 +23,40 @@ class EngagementGateTest extends FeatureTestCase
         $this->assertFalse($result['allowed']);
     }
 
-    public function test_user_without_a_session_is_allowed_through(): void
+    public function test_user_without_a_session_is_denied(): void
     {
         $user = $this->makeUser();
         $document = $this->makeDocument($user->getId(), totalPages: 3, delay: 5);
 
-        // Backward-compat: never started a session → not gated.
+        // Never opened the document, so there is no reading evidence at all
+        $result = $this->gate()->evaluate($user->getId(), $document->uuid);
+
+        $this->assertFalse($result['allowed']);
+        $this->assertSame(EngagementGate::REASON_NO_SESSION, $result['reason']);
+        $this->assertSame([1, 2, 3], $result['missingPages']);
+    }
+
+    public function test_document_without_a_reading_minimum_is_allowed_without_a_session(): void
+    {
+        $user = $this->makeUser();
+        $document = $this->makeDocument($user->getId(), totalPages: 3, delay: 0);
+
         $result = $this->gate()->evaluate($user->getId(), $document->uuid);
 
         $this->assertTrue($result['allowed']);
+        $this->assertNull($result['reason']);
+    }
+
+    public function test_unknown_page_count_is_denied(): void
+    {
+        $user = $this->makeUser();
+        $document = $this->makeDocument($user->getId(), totalPages: null, delay: 5);
+        $this->sessions()->create($user->getId(), $document->id, 1);
+
+        $result = $this->gate()->evaluate($user->getId(), $document->uuid);
+
+        $this->assertFalse($result['allowed']);
+        $this->assertSame(EngagementGate::REASON_PAGE_COUNT_UNKNOWN, $result['reason']);
     }
 
     public function test_session_with_unmet_pages_is_denied(): void
@@ -46,6 +71,7 @@ class EngagementGateTest extends FeatureTestCase
         $result = $this->gate()->evaluate($user->getId(), $document->uuid);
 
         $this->assertFalse($result['allowed']);
+        $this->assertSame(EngagementGate::REASON_INCOMPLETE, $result['reason']);
         $this->assertSame([2], $result['missingPages']);
     }
 
@@ -86,7 +112,7 @@ class EngagementGateTest extends FeatureTestCase
         ]]);
     }
 
-    private function makeDocument(int $userId, int $totalPages, int $delay): Document
+    private function makeDocument(int $userId, ?int $totalPages, int $delay): Document
     {
         return Document::create([
             'uuid' => (string) Str::uuid(),

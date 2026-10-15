@@ -42,8 +42,11 @@ class MarkReadRequest extends FormRequest
             ->evaluate(Auth::id(), (string)$this->route('document'));
 
         if (!$gateResult['allowed']) {
+            $reason = $gateResult['reason'] ?? 'incomplete';
+
             throw new HttpResponseException(response()->json([
-                'message' => __('engagement::messages.gate.incomplete'),
+                'message' => __('engagement::messages.gate.' . $reason),
+                'reason' => $reason,
                 'missing_pages' => $gateResult['missingPages'],
                 'min_seconds_per_page' => $gateResult['minSecondsPerPage'],
                 'total_pages' => $gateResult['totalPages'],

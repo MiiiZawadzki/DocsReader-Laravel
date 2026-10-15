@@ -9,7 +9,7 @@ interface EngagementApiInterface
     /**
      * @param  int  $userId
      * @param  string  $documentUuid
-     * @return array{allowed: bool, missingPages: int[], minSecondsPerPage: int, totalPages: ?int}
+     * @return array{allowed: bool, reason: ?string, missingPages: int[], minSecondsPerPage: int, totalPages: ?int}
      */
     public function evaluate(int $userId, string $documentUuid): array;
 
