@@ -21,6 +21,14 @@ interface UserDocumentRepositoryInterface
 
     /**
      * @param int $userId
+     * @param string $documentUuid
+     * @param Carbon|null $activeOn Also require the document's validity window to include this date
+     * @return bool
+     */
+    public function isAssigned(int $userId, string $documentUuid, ?Carbon $activeOn = null): bool;
+
+    /**
+     * @param int $userId
      * @param Carbon $date
      * @return array
      */

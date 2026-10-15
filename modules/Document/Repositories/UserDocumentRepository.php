@@ -35,6 +35,29 @@ class UserDocumentRepository implements UserDocumentRepositoryInterface
 
     /**
      * @param int $userId
+     * @param string $documentUuid
+     * @param Carbon|null $activeOn
+     * @return bool
+     */
+    public function isAssigned(int $userId, string $documentUuid, ?Carbon $activeOn = null): bool
+    {
+        return UserDocument::where('user_id', $userId)
+            ->whereHas('document', function (Builder $builder) use ($documentUuid, $activeOn) {
+                $builder->where('uuid', $documentUuid);
+
+                if ($activeOn !== null) {
+                    $builder->whereDate('date_from', '<=', $activeOn);
+                    $builder->where(function (Builder $inner) use ($activeOn) {
+                        $inner->whereNull('date_to')
+                            ->orWhereDate('date_to', '>=', $activeOn);
+                    });
+                }
+            })
+            ->exists();
+    }
+
+    /**
+     * @param int $userId
      * @param Carbon $date
      * @return array
      */

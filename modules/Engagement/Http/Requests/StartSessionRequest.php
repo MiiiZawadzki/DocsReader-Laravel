@@ -19,7 +19,7 @@ class StartSessionRequest extends FormRequest
             return false;
         }
 
-        return app(DocumentApiInterface::class)->verifyAssignedDocument(Auth::id(), $uuid);
+        return app(DocumentApiInterface::class)->verifyActiveAssignedDocument(Auth::id(), $uuid);
     }
 
     public function rules(): array

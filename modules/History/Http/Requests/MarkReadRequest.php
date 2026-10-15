@@ -20,7 +20,7 @@ class MarkReadRequest extends FormRequest
         }
 
         return app(DocumentApiInterface::class)
-            ->verifyAssignedDocument(Auth::id(), $id);
+            ->verifyActiveAssignedDocument(Auth::id(), $id);
     }
 
     /**
