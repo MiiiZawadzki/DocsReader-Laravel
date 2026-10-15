@@ -5,6 +5,7 @@ namespace Modules\Analytics\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Modules\Analytics\Http\Requests\ManageStatisticsRequest;
 use Modules\Analytics\Services\ManageStatisticsService;
 
 class ManageStatisticsController
@@ -14,9 +15,10 @@ class ManageStatisticsController
     }
 
     /**
+     * @param ManageStatisticsRequest $request
      * @return JsonResponse
      */
-    public function stats(): JsonResponse
+    public function stats(ManageStatisticsRequest $request): JsonResponse
     {
         try {
             return response()->json([
@@ -39,9 +41,10 @@ class ManageStatisticsController
     }
 
     /**
+     * @param ManageStatisticsRequest $request
      * @return JsonResponse
      */
-    public function charts(): JsonResponse
+    public function charts(ManageStatisticsRequest $request): JsonResponse
     {
         try {
             return response()->json([
@@ -59,9 +62,10 @@ class ManageStatisticsController
     }
 
     /**
+     * @param ManageStatisticsRequest $request
      * @return JsonResponse
      */
-    public function readStatistics(): JsonResponse
+    public function readStatistics(ManageStatisticsRequest $request): JsonResponse
     {
         try {
             $userId = Auth::id();
@@ -77,9 +81,10 @@ class ManageStatisticsController
     }
 
     /**
+     * @param ManageStatisticsRequest $request
      * @return JsonResponse
      */
-    public function activeDocuments(): JsonResponse
+    public function activeDocuments(ManageStatisticsRequest $request): JsonResponse
     {
         try {
             $userId = Auth::id();
@@ -96,9 +101,10 @@ class ManageStatisticsController
     }
 
     /**
+     * @param ManageStatisticsRequest $request
      * @return JsonResponse
      */
-    public function totalDocuments(): JsonResponse
+    public function totalDocuments(ManageStatisticsRequest $request): JsonResponse
     {
         try {
             $userId = Auth::id();

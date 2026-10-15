@@ -3,7 +3,7 @@
 namespace Modules\Analytics\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Modules\Analytics\Http\Requests\DocumentEngagementRequest;
 use Modules\Analytics\Services\DocumentStatisticsService;
 use Modules\Document\Api\DocumentApiInterface;
 
@@ -17,10 +17,10 @@ class DocumentStatisticsController
     }
 
     /**
-     * @param Request $request
+     * @param DocumentEngagementRequest $request
      * @return JsonResponse
      */
-    public function stats(Request $request): JsonResponse
+    public function stats(DocumentEngagementRequest $request): JsonResponse
     {
         try {
             $documentId = $request->route('document');
@@ -51,10 +51,10 @@ class DocumentStatisticsController
     }
 
     /**
-     * @param Request $request
+     * @param DocumentEngagementRequest $request
      * @return JsonResponse
      */
-    public function charts(Request $request): JsonResponse
+    public function charts(DocumentEngagementRequest $request): JsonResponse
     {
         $documentId = $request->route('document');
 
@@ -74,10 +74,10 @@ class DocumentStatisticsController
     }
 
     /**
-     * @param Request $request
+     * @param DocumentEngagementRequest $request
      * @return JsonResponse
      */
-    public function readStatistics(Request $request): JsonResponse
+    public function readStatistics(DocumentEngagementRequest $request): JsonResponse
     {
         try {
             $documentUuid = $request->route('document');
@@ -94,10 +94,10 @@ class DocumentStatisticsController
     }
 
     /**
-     * @param Request $request
+     * @param DocumentEngagementRequest $request
      * @return JsonResponse
      */
-    public function documentReads(Request $request): JsonResponse
+    public function documentReads(DocumentEngagementRequest $request): JsonResponse
     {
         try {
             $documentUuid = $request->route('document');
@@ -114,10 +114,10 @@ class DocumentStatisticsController
     }
 
     /**
-     * @param Request $request
+     * @param DocumentEngagementRequest $request
      * @return JsonResponse
      */
-    public function documentAssignment(Request $request): JsonResponse
+    public function documentAssignment(DocumentEngagementRequest $request): JsonResponse
     {
         try {
             $documentUuid = $request->route('document');
@@ -134,10 +134,10 @@ class DocumentStatisticsController
     }
 
     /**
-     * @param Request $request
+     * @param DocumentEngagementRequest $request
      * @return JsonResponse
      */
-    public function documentReadRatio(Request $request): JsonResponse
+    public function documentReadRatio(DocumentEngagementRequest $request): JsonResponse
     {
         try {
             $documentUuid = $request->route('document');
