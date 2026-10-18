@@ -4,6 +4,7 @@ return [
     'session' => [
         'started' => 'Sesja czytania rozpoczęta.',
         'not_found' => 'Sesja czytania nie została znaleziona.',
+        'already_ended' => 'Ta sesja czytania została zakończona. Otwórz dokument ponownie, aby kontynuować.',
         'ended' => 'Sesja czytania zakończona.',
     ],
     'gate' => [

@@ -4,6 +4,7 @@ return [
     'session' => [
         'started' => 'Reading session started.',
         'not_found' => 'Reading session not found.',
+        'already_ended' => 'This reading session has ended. Reopen the document to continue.',
         'ended' => 'Reading session ended.',
     ],
     'gate' => [

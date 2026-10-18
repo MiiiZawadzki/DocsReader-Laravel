@@ -63,6 +63,12 @@ interface DocumentApiInterface
     public function getDocumentByUuid(string $documentUuid): ?DocumentDTO;
 
     /**
+     * @param  int  $documentId
+     * @return DocumentDTO|null
+     */
+    public function getDocumentById(int $documentId): ?DocumentDTO;
+
+    /**
      * @param  int  $userId
      * @return Collection<int, DocumentDTO>
      */

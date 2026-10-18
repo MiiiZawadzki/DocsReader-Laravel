@@ -119,6 +119,74 @@ class EngagementRecorderTest extends FeatureTestCase
         $this->assertSame(5, (int) $session->fresh()->total_active_seconds);
     }
 
+    public function test_ticks_for_pages_beyond_the_document_are_dropped(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument(totalPages: 2);
+        $session = $this->createSession($user->getId(), $document->id);
+
+        $result = $this->recorder()->record($session, [
+            $this->tick(pageNumber: 2, activeMs: 4000),
+            $this->tick(pageNumber: 3, activeMs: 4000),
+        ]);
+
+        $this->assertSame(1, $result['accepted']);
+        $this->assertSame(0, $this->pageSeconds($user->getId(), $document->id, 3));
+    }
+
+    public function test_credited_time_cannot_exceed_the_time_the_session_has_been_open(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+        $session = $this->createSession($user->getId(), $document->id);
+
+        $this->travel(10)->seconds();
+
+        // 10s open plus the one-off grace allows 25s; the rest of the minute claimed here is refused
+        $ticks = [];
+        for ($i = 0; $i < 6; $i++) {
+            $ticks[] = $this->tick(pageNumber: 1, activeMs: 10000);
+        }
+        $result = $this->recorder()->record($session, $ticks);
+
+        $this->assertSame(2, $result['accepted']);
+        $this->assertSame(20, $this->pageSeconds($user->getId(), $document->id, 1));
+    }
+
+    public function test_grace_is_granted_once_per_session_not_per_batch(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+        $session = $this->createSession($user->getId(), $document->id);
+
+        // Rapid-fire batches with no time passing can't each claim a fresh grace
+        for ($i = 0; $i < 5; $i++) {
+            $this->recorder()->record($session->fresh(), [$this->tick(pageNumber: 1, activeMs: 5000)]);
+        }
+
+        $this->assertSame(15, $this->pageSeconds($user->getId(), $document->id, 1));
+    }
+
+    public function test_ended_session_accepts_no_ticks(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+        $session = $this->createSession($user->getId(), $document->id);
+        $this->recorder()->end($session);
+
+        $result = $this->recorder()->record($session->fresh(), [$this->tick(pageNumber: 1, activeMs: 5000)]);
+
+        $this->assertTrue($result['ended']);
+        $this->assertSame(0, ReadingPageTick::count());
+    }
+
+    public function test_starting_a_session_ends_the_users_other_open_sessions_on_the_document(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+
+        $older = $this->recorder()->start($user->getId(), $document->id);
+        $newer = $this->recorder()->start($user->getId(), $document->id);
+
+        $this->assertNotNull($older->fresh()->ended_at);
+        $this->assertNull($newer->fresh()->ended_at);
+    }
+
 
     private function recorder(): EngagementRecorder
     {
@@ -126,9 +194,10 @@ class EngagementRecorderTest extends FeatureTestCase
     }
 
     /**
+     * @param  int|null  $totalPages
      * @return array{0: UserDTO, 1: Document}
      */
-    private function makeUserAndDocument(): array
+    private function makeUserAndDocument(?int $totalPages = null): array
     {
         $user = $this->makeUser();
         $document = Document::create([
@@ -142,6 +211,7 @@ class EngagementRecorderTest extends FeatureTestCase
             'date_to' => null,
             'declaration_message' => null,
             'delay' => 0,
+            'total_pages' => $totalPages,
         ]);
 
         return [$user, $document];

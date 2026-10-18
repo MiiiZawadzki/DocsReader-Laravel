@@ -83,6 +83,21 @@ class ConfirmReadingTest extends FeatureTestCase
         $this->confirm($document)->assertStatus(200);
     }
 
+    public function test_ticks_for_a_superseded_session_are_rejected(): void
+    {
+        $user = $this->loginAsRegularUser();
+        $document = $this->assignedDocument($user->getId());
+
+        // A second tab opening the document supersedes the first tab's session
+        $firstTab = $this->startReadingSession($document)->json('data.session_uuid');
+        $this->startReadingSession($document);
+        $this->travel(15)->seconds();
+
+        $this->sendTicks($firstTab, [1 => 5000])
+            ->assertStatus(409)
+            ->assertJsonPath('message', __('engagement::messages.session.already_ended'));
+    }
+
     private function loginAsRegularUser(): UserDTO
     {
         $user = $this->makeUser();

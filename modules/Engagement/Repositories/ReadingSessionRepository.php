@@ -49,6 +49,21 @@ class ReadingSessionRepository implements ReadingSessionRepositoryInterface
     /**
      * @param  int  $userId
      * @param  int  $documentId
+     * @param  int  $exceptSessionId
+     * @return int
+     */
+    public function endOpenForUserDocument(int $userId, int $documentId, int $exceptSessionId): int
+    {
+        return ReadingSession::where('user_id', $userId)
+            ->where('document_id', $documentId)
+            ->whereKeyNot($exceptSessionId)
+            ->whereNull('ended_at')
+            ->update(['ended_at' => now()]);
+    }
+
+    /**
+     * @param  int  $userId
+     * @param  int  $documentId
      * @return int
      */
     public function highestLastPage(int $userId, int $documentId): int

@@ -42,6 +42,21 @@ readonly class DocumentApi implements DocumentApiInterface
     }
 
     /**
+     * @param  int  $documentId
+     * @return DocumentDTO|null
+     */
+    public function getDocumentById(int $documentId): ?DocumentDTO
+    {
+        $model = $this->documentRepository->getDocumentsById([$documentId])->first();
+
+        if ($model) {
+            return DocumentDTO::fromModel($model);
+        }
+
+        return null;
+    }
+
+    /**
      * @param  array  $documentsId
      * @param  string|null  $query
      * @return Collection<int, DocumentDTO>

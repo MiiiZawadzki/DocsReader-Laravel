@@ -52,6 +52,13 @@ readonly class ReadingSessionController
 
         $result = $this->recorder->record($session, $request->input('ticks', []));
 
+        // Ended by the user, or superseded by a newer session on the same document
+        if ($result['ended']) {
+            return response()->json([
+                'message' => __('engagement::messages.session.already_ended'),
+            ], 409);
+        }
+
         return response()->json([
             'accepted' => $result['accepted'],
             'last_page' => $result['lastPage'],

@@ -4,6 +4,7 @@ namespace Modules\Engagement\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Modules\Document\Api\DocumentApiInterface;
 use Modules\Engagement\Models\ReadingSession;
 use Modules\Engagement\Repositories\Contracts\PageProgressRepositoryInterface;
 use Modules\Engagement\Repositories\Contracts\PageTickRepositoryInterface;
@@ -13,10 +14,13 @@ class EngagementRecorder
 {
     public const MAX_TICK_MS = 15000;
 
+    public const BUDGET_GRACE_MS = 15000;
+
     public function __construct(
         private readonly ReadingSessionRepositoryInterface $sessions,
         private readonly PageTickRepositoryInterface $ticks,
         private readonly PageProgressRepositoryInterface $progress,
+        private readonly DocumentApiInterface $documentApi,
     ) {}
 
     /**
@@ -29,43 +33,58 @@ class EngagementRecorder
     {
         $resumePage = $this->sessions->highestLastPage($userId, $documentId);
 
-        return $this->sessions->create($userId, $documentId, $resumePage, $clientMeta);
+        $session = $this->sessions->create($userId, $documentId, $resumePage, $clientMeta);
+
+        // One live session per user and document, so parallel tabs can't each claim the same wall-clock time
+        $this->sessions->endOpenForUserDocument($userId, $documentId, $session->id);
+
+        return $session;
     }
 
     /**
      * @param  ReadingSession  $session
      * @param  array<int, array{clientEventId: string, pageNumber: int, activeMs: int, occurredAt: string}>  $ticks
-     * @return array{accepted: int, lastPage: int}
+     * @return array{accepted: int, lastPage: int, ended: bool}
      */
     public function record(ReadingSession $session, array $ticks): array
     {
-        $candidates = $this->sanitize($ticks);
+        if ($session->ended_at !== null) {
+            return $this->unchanged($session, ended: true);
+        }
+
+        $totalPages = $this->documentApi->getDocumentById($session->document_id)?->totalPages;
+        $candidates = $this->sanitize($ticks, $totalPages);
 
         if (empty($candidates)) {
             return $this->unchanged($session);
         }
 
         return DB::transaction(function () use ($session, $candidates) {
-            // Serialize batches of one session, so the duplicate check below sees each other's writes
-            $locked = $this->sessions->findForUpdate($session->id) ?? $session;
+            // Serialize batches of one session, so the duplicate check and the time budget see each other's writes
+            $locked = $this->sessions->findForUpdate($session->id);
+            if ($locked === null || $locked->ended_at !== null) {
+                return $this->unchanged($session, ended: true);
+            }
 
             // A retried batch can mix already-recorded ticks with new ones, and only the new ones may be credited
             foreach ($this->ticks->existingClientEventIds($locked->id, array_keys($candidates)) as $knownId) {
                 unset($candidates[$knownId]);
             }
 
-            if (empty($candidates)) {
+            $now = now();
+            $accepted = $this->withinTimeBudget($locked, $candidates, $now);
+
+            if (empty($accepted)) {
                 return $this->unchanged($locked);
             }
 
-            $now = now();
             $rows = [];
             $perPageMs = [];
             $perPageOccurredAt = [];
             $latestOccurredAt = null;
             $latestPage = $locked->last_page;
 
-            foreach ($candidates as $clientEventId => $tick) {
+            foreach ($accepted as $clientEventId => $tick) {
                 $rows[] = [
                     'reading_session_id' => $locked->id,
                     'user_id' => $locked->user_id,
@@ -114,11 +133,12 @@ class EngagementRecorder
             $this->progress->incrementBatch($entries);
 
             $locked->total_active_seconds = $locked->total_active_seconds + $totalAddSeconds;
-            $locked->last_tick_at = $latestOccurredAt;
+            // Server receive time, the client's occurredAt is not trusted for anything but ordering
+            $locked->last_tick_at = $now;
             $locked->last_page = $latestPage;
             $locked->save();
 
-            return ['accepted' => $inserted, 'lastPage' => $locked->last_page];
+            return ['accepted' => $inserted, 'lastPage' => $locked->last_page, 'ended' => false];
         });
     }
 
@@ -132,12 +152,13 @@ class EngagementRecorder
     }
 
     /**
-     * Drop malformed ticks and repeats within the batch, keyed by client event id
+     * Drop malformed ticks, repeats within the batch and pages the document doesn't have, keyed by client event id
      *
      * @param  array  $ticks
+     * @param  int|null  $totalPages
      * @return array<string, array{pageNumber: int, activeMs: int, occurredAt: Carbon}>
      */
-    private function sanitize(array $ticks): array
+    private function sanitize(array $ticks, ?int $totalPages): array
     {
         $now = now();
         $candidates = [];
@@ -151,7 +172,7 @@ class EngagementRecorder
             if ($activeMs <= 0 || $activeMs > self::MAX_TICK_MS) {
                 continue;
             }
-            if ($pageNumber < 1) {
+            if ($pageNumber < 1 || ($totalPages !== null && $pageNumber > $totalPages)) {
                 continue;
             }
             if (strlen($clientEventId) !== 26 || isset($candidates[$clientEventId])) {
@@ -175,11 +196,37 @@ class EngagementRecorder
     }
 
     /**
+     * Keep ticks, in batch order, while their total fits the wall-clock time the session has been open
+     *
      * @param  ReadingSession  $session
-     * @return array{accepted: int, lastPage: int}
+     * @param  array<string, array{pageNumber: int, activeMs: int, occurredAt: Carbon}>  $candidates
+     * @param  Carbon  $now
+     * @return array<string, array{pageNumber: int, activeMs: int, occurredAt: Carbon}>
      */
-    private function unchanged(ReadingSession $session): array
+    private function withinTimeBudget(ReadingSession $session, array $candidates, Carbon $now): array
     {
-        return ['accepted' => 0, 'lastPage' => $session->last_page];
+        $elapsedMs = (int) max(0, $session->started_at->diffInMilliseconds($now));
+        $remainingMs = $elapsedMs + self::BUDGET_GRACE_MS - $this->ticks->totalActiveMsForSession($session->id);
+
+        $accepted = [];
+        foreach ($candidates as $clientEventId => $tick) {
+            if ($tick['activeMs'] > $remainingMs) {
+                break;
+            }
+            $remainingMs -= $tick['activeMs'];
+            $accepted[$clientEventId] = $tick;
+        }
+
+        return $accepted;
+    }
+
+    /**
+     * @param  ReadingSession  $session
+     * @param  bool  $ended
+     * @return array{accepted: int, lastPage: int, ended: bool}
+     */
+    private function unchanged(ReadingSession $session, bool $ended = false): array
+    {
+        return ['accepted' => 0, 'lastPage' => $session->last_page, 'ended' => $ended];
     }
 }
