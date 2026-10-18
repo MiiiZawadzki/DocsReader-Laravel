@@ -13,6 +13,15 @@ interface PageTickRepositoryInterface
     public function insertIgnore(array $rows): int;
 
     /**
+     * Which of the given client event ids are already recorded for the session
+     *
+     * @param  int  $sessionId
+     * @param  array<string>  $clientEventIds
+     * @return array<string>
+     */
+    public function existingClientEventIds(int $sessionId, array $clientEventIds): array;
+
+    /**
      * Furthest page reached by each session
      *
      * @param  array<string>  $sessionUuids

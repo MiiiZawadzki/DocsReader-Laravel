@@ -21,6 +21,24 @@ class PageTickRepository implements PageTickRepositoryInterface
     }
 
     /**
+     * @param  int  $sessionId
+     * @param  array<string>  $clientEventIds
+     * @return array<string>
+     */
+    public function existingClientEventIds(int $sessionId, array $clientEventIds): array
+    {
+        if (empty($clientEventIds)) {
+            return [];
+        }
+
+        return DB::table('reading_page_ticks')
+            ->where('reading_session_id', $sessionId)
+            ->whereIn('client_event_id', $clientEventIds)
+            ->pluck('client_event_id')
+            ->all();
+    }
+
+    /**
      * @param  array<string>  $sessionUuids
      * @return array<string, int>
      */

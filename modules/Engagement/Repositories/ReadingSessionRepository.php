@@ -38,6 +38,15 @@ class ReadingSessionRepository implements ReadingSessionRepositoryInterface
     }
 
     /**
+     * @param  int  $id
+     * @return ReadingSession|null
+     */
+    public function findForUpdate(int $id): ?ReadingSession
+    {
+        return ReadingSession::lockForUpdate()->find($id);
+    }
+
+    /**
      * @param  int  $userId
      * @param  int  $documentId
      * @return int

@@ -23,6 +23,14 @@ interface ReadingSessionRepositoryInterface
     public function findByUuid(string $uuid): ?ReadingSession;
 
     /**
+     * Re-read the session with a row lock.
+     *
+     * @param  int  $id
+     * @return ReadingSession|null
+     */
+    public function findForUpdate(int $id): ?ReadingSession;
+
+    /**
      * @param  int  $userId
      * @param  int  $documentId
      * @return int

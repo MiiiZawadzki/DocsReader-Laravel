@@ -86,6 +86,39 @@ class EngagementRecorderTest extends FeatureTestCase
         $this->assertSame(6, (int) $session->fresh()->total_active_seconds);
     }
 
+    public function test_partially_duplicated_batch_only_credits_the_new_ticks(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+        $session = $this->createSession($user->getId(), $document->id);
+
+        $first = $this->tick(pageNumber: 1, activeMs: 5000);
+        $this->recorder()->record($session, [$first]);
+
+        // A failed flush re-sends the old tick at the head of the next batch
+        $result = $this->recorder()->record($session->fresh(), [
+            $first,
+            $this->tick(pageNumber: 1, activeMs: 3000),
+        ]);
+
+        $this->assertSame(1, $result['accepted']);
+        $this->assertSame(2, ReadingPageTick::count());
+        $this->assertSame(8, $this->pageSeconds($user->getId(), $document->id, 1));
+        $this->assertSame(8, (int) $session->fresh()->total_active_seconds);
+    }
+
+    public function test_tick_repeated_within_one_batch_is_credited_once(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+        $session = $this->createSession($user->getId(), $document->id);
+
+        $tick = $this->tick(pageNumber: 1, activeMs: 5000);
+        $result = $this->recorder()->record($session, [$tick, $tick]);
+
+        $this->assertSame(1, $result['accepted']);
+        $this->assertSame(5, $this->pageSeconds($user->getId(), $document->id, 1));
+        $this->assertSame(5, (int) $session->fresh()->total_active_seconds);
+    }
+
 
     private function recorder(): EngagementRecorder
     {
