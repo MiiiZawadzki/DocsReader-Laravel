@@ -15,6 +15,7 @@ class DocumentReadRepository implements DocumentReadRepositoryInterface
      * @param  int|null  $sessionId
      * @param  int|null  $totalActiveSeconds
      * @param  int|null  $pagesViewedCount
+     * @param  string|null  $declarationSnapshot
      * @return DocumentRead
      */
     public function markAsRead(
@@ -23,9 +24,8 @@ class DocumentReadRepository implements DocumentReadRepositoryInterface
         ?int $sessionId = null,
         ?int $totalActiveSeconds = null,
         ?int $pagesViewedCount = null,
+        ?string $declarationSnapshot = null,
     ): DocumentRead {
-        $now = now();
-
         $documentRead = DocumentRead::firstOrCreate(
             [
                 'document_id' => $documentId,
@@ -34,24 +34,16 @@ class DocumentReadRepository implements DocumentReadRepositoryInterface
             ],
             [
                 'certificate_id' => (string)Str::ulid(),
-                'confirmed_at' => $now,
+                'declaration_snapshot' => $declarationSnapshot,
+                'confirmed_at' => now(),
                 'total_active_seconds' => $totalActiveSeconds,
                 'pages_viewed_count' => $pagesViewedCount,
                 'last_session_id' => $sessionId,
             ]
         );
 
-        if (!$documentRead->wasRecentlyCreated) {
-            $update = [
-                'confirmed_at' => $now,
-                'total_active_seconds' => $totalActiveSeconds ?? $documentRead->total_active_seconds,
-                'pages_viewed_count' => $pagesViewedCount ?? $documentRead->pages_viewed_count,
-                'last_session_id' => $sessionId ?? $documentRead->last_session_id,
-            ];
-            if (empty($documentRead->certificate_id)) {
-                $update['certificate_id'] = (string)Str::ulid();
-            }
-            $documentRead->forceFill($update)->save();
+        if (empty($documentRead->certificate_id)) {
+            $documentRead->forceFill(['certificate_id' => (string)Str::ulid()])->save();
         }
 
         return $documentRead;

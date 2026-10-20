@@ -13,6 +13,7 @@ interface DocumentReadRepositoryInterface
      * @param  int|null  $sessionId
      * @param  int|null  $totalActiveSeconds
      * @param  int|null  $pagesViewedCount
+     * @param  string|null  $declarationSnapshot
      * @return DocumentRead
      */
     public function markAsRead(
@@ -21,6 +22,7 @@ interface DocumentReadRepositoryInterface
         ?int $sessionId = null,
         ?int $totalActiveSeconds = null,
         ?int $pagesViewedCount = null,
+        ?string $declarationSnapshot = null,
     ): DocumentRead;
 
     /**

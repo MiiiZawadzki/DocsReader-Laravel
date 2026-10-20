@@ -21,11 +21,14 @@ interface EngagementApiInterface
     public function snapshot(int $userId, int $documentId): array;
 
     /**
+     * Resolve a session id, only when it belongs to the given user and document.
+     *
      * @param  string  $sessionUuid
      * @param  int  $userId
+     * @param  int  $documentId
      * @return int|null
      */
-    public function findSessionIdByUuid(string $sessionUuid, int $userId): ?int;
+    public function findSessionIdByUuid(string $sessionUuid, int $userId, int $documentId): ?int;
 
     /**
      * @param  int  $documentId

@@ -53,7 +53,7 @@ class DocumentsHistoryController
 
             $sessionUuid = $request->input('session_uuid');
             $sessionId = $sessionUuid
-                ? $this->engagementApi->findSessionIdByUuid($sessionUuid, $userId)
+                ? $this->engagementApi->findSessionIdByUuid($sessionUuid, $userId, $documentDto->id)
                 : null;
             $snapshot = $this->engagementApi->snapshot($userId, $documentDto->id);
 
@@ -63,6 +63,7 @@ class DocumentsHistoryController
                 $sessionId,
                 $snapshot['totalActiveSeconds'] ?: null,
                 $snapshot['pagesViewedCount'] ?: null,
+                $documentDto->requiresConfirmation ? $documentDto->declarationMessage : null,
             );
 
             if ($documentRead->wasRecentlyCreated) {

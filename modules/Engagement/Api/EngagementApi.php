@@ -40,12 +40,13 @@ readonly class EngagementApi implements EngagementApiInterface
     /**
      * @param  string  $sessionUuid
      * @param  int  $userId
+     * @param  int  $documentId
      * @return int|null
      */
-    public function findSessionIdByUuid(string $sessionUuid, int $userId): ?int
+    public function findSessionIdByUuid(string $sessionUuid, int $userId, int $documentId): ?int
     {
         $session = $this->sessions->findByUuid($sessionUuid);
-        if ($session === null || $session->user_id !== $userId) {
+        if ($session === null || $session->user_id !== $userId || $session->document_id !== $documentId) {
             return null;
         }
 

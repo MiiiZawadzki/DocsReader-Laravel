@@ -16,6 +16,7 @@ class DocumentRead extends Model
         'user_id',
         'confirmed',
         'certificate_id',
+        'declaration_snapshot',
         'confirmed_at',
         'total_active_seconds',
         'pages_viewed_count',

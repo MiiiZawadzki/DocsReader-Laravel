@@ -28,6 +28,7 @@ class ConfirmReadingTest extends FeatureTestCase
 
         $this->assertNotEmpty($response->json('certificateId'));
         $read = DocumentRead::firstOrFail();
+        $this->assertSame('I have read and understood this policy.', $read->declaration_snapshot);
         $this->assertSame(10, $read->total_active_seconds);
         $this->assertNotNull($read->last_session_id);
     }
@@ -96,6 +97,59 @@ class ConfirmReadingTest extends FeatureTestCase
         $this->sendTicks($firstTab, [1 => 5000])
             ->assertStatus(409)
             ->assertJsonPath('message', __('engagement::messages.session.already_ended'));
+    }
+
+    public function test_confirming_again_keeps_the_original_record(): void
+    {
+        $user = $this->loginAsRegularUser();
+        $document = $this->assignedDocument($user->getId());
+
+        $sessionUuid = $this->startReadingSession($document)->json('data.session_uuid');
+        $this->travel(15)->seconds();
+        $this->sendTicks($sessionUuid, [1 => 5000, 2 => 5000]);
+        $first = $this->confirm($document, $sessionUuid)->json('certificateId');
+        $original = DocumentRead::firstOrFail();
+
+        // Days later the reader opens it again, reads more, and confirms once more
+        $this->travel(2)->days();
+        $laterSession = $this->startReadingSession($document)->json('data.session_uuid');
+        $this->travel(15)->seconds();
+        $this->sendTicks($laterSession, [1 => 5000, 2 => 5000]);
+        $second = $this->confirm($document, $laterSession)->assertStatus(200)->json('certificateId');
+
+        $this->assertSame($first, $second);
+        $this->assertSame(1, DocumentRead::count());
+        $read = DocumentRead::firstOrFail();
+        $this->assertTrue($original->confirmed_at->equalTo($read->confirmed_at));
+        $this->assertSame($original->total_active_seconds, $read->total_active_seconds);
+        $this->assertSame($original->last_session_id, $read->last_session_id);
+    }
+
+    public function test_declaration_snapshot_keeps_the_text_the_reader_agreed_to(): void
+    {
+        $user = $this->loginAsRegularUser();
+        $document = $this->assignedDocument($user->getId(), ['delay' => 0]);
+        $this->confirm($document)->assertStatus(200);
+
+        $document->update(['declaration_message' => 'A reworded declaration.']);
+
+        $this->assertSame('I have read and understood this policy.', DocumentRead::firstOrFail()->declaration_snapshot);
+    }
+
+    public function test_session_from_another_document_is_not_linked_to_the_confirmation(): void
+    {
+        $user = $this->loginAsRegularUser();
+        $document = $this->assignedDocument($user->getId());
+        $other = $this->assignedDocument($user->getId());
+
+        $otherSession = $this->startReadingSession($other)->json('data.session_uuid');
+        $sessionUuid = $this->startReadingSession($document)->json('data.session_uuid');
+        $this->travel(15)->seconds();
+        $this->sendTicks($sessionUuid, [1 => 5000, 2 => 5000]);
+
+        $this->confirm($document, $otherSession)->assertStatus(200);
+
+        $this->assertNull(DocumentRead::firstOrFail()->last_session_id);
     }
 
     private function loginAsRegularUser(): UserDTO
