@@ -152,6 +152,51 @@ class ConfirmReadingTest extends FeatureTestCase
         $this->assertNull(DocumentRead::firstOrFail()->last_session_id);
     }
 
+    public function test_beacon_ticks_sent_as_text_plain_are_recorded(): void
+    {
+        $user = $this->loginAsRegularUser();
+        $document = $this->assignedDocument($user->getId());
+
+        $sessionUuid = $this->startReadingSession($document)->json('data.session_uuid');
+        $this->travel(15)->seconds();
+
+        $body = json_encode(['ticks' => [[
+            'clientEventId' => (string) Str::ulid(),
+            'pageNumber' => 1,
+            'activeMs' => 5000,
+            'occurredAt' => now()->toIso8601String(),
+        ]]]);
+
+        $this->sendBeacon('/api/reading-sessions/'.$sessionUuid.'/ticks', $body)
+            ->assertStatus(202)
+            ->assertJsonPath('accepted', 1);
+
+        $this->sendBeacon('/api/reading-sessions/'.$sessionUuid.'/end')->assertStatus(200);
+
+        // The beacon really ended the session
+        $this->sendTicks($sessionUuid, [2 => 5000])->assertStatus(409);
+    }
+
+    public function test_malformed_beacon_body_is_rejected_by_validation(): void
+    {
+        $user = $this->loginAsRegularUser();
+        $document = $this->assignedDocument($user->getId());
+
+        $sessionUuid = $this->startReadingSession($document)->json('data.session_uuid');
+
+        $this->sendBeacon('/api/reading-sessions/'.$sessionUuid.'/ticks', 'not json')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('ticks');
+    }
+
+    private function sendBeacon(string $uri, string $body = ''): TestResponse
+    {
+        return $this->call('POST', $uri, [], [], [], [
+            'CONTENT_TYPE' => 'text/plain;charset=UTF-8',
+            'HTTP_ACCEPT' => 'application/json',
+        ], $body);
+    }
+
     private function loginAsRegularUser(): UserDTO
     {
         $user = $this->makeUser();
