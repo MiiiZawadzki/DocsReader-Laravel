@@ -189,11 +189,19 @@ class ConfirmReadingTest extends FeatureTestCase
             ->assertJsonValidationErrors('ticks');
     }
 
+    public function test_beacon_without_a_login_gets_a_json_401(): void
+    {
+        $this->sendBeacon('/api/reading-sessions/'.Str::ulid().'/end')
+            ->assertStatus(401)
+            ->assertJsonPath('message', 'Unauthenticated.');
+    }
+
     private function sendBeacon(string $uri, string $body = ''): TestResponse
     {
+        // A real beacon can't set headers, so it never asks for JSON
         return $this->call('POST', $uri, [], [], [], [
             'CONTENT_TYPE' => 'text/plain;charset=UTF-8',
-            'HTTP_ACCEPT' => 'application/json',
+            'HTTP_ACCEPT' => '*/*',
         ], $body);
     }
 

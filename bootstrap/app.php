@@ -19,10 +19,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(SetLocale::class);
         $middleware->api(prepend: [JwtCookieToHeader::class]);
         $middleware->throttleApi();
+        // The login page lives in the frontend app
+        $middleware->redirectGuestsTo(fn() => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (Throwable $e, Request $request) {
-            if (!$request->expectsJson() || config('app.debug')) {
+        // The API only speaks JSON
+        $wantsJson = fn(Request $request) => $request->is('api/*') || $request->expectsJson();
+
+        $exceptions->shouldRenderJsonWhen($wantsJson);
+
+        $exceptions->render(function (Throwable $e, Request $request) use ($wantsJson) {
+            if (!$wantsJson($request) || config('app.debug')) {
                 return null;
             }
 
