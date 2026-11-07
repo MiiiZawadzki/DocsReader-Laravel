@@ -177,6 +177,29 @@ class ConfirmReadingTest extends FeatureTestCase
         $this->sendTicks($sessionUuid, [2 => 5000])->assertStatus(409);
     }
 
+    public function test_end_beacon_records_the_final_ticks_before_ending_the_session(): void
+    {
+        $user = $this->loginAsRegularUser();
+        $document = $this->assignedDocument($user->getId());
+
+        $sessionUuid = $this->startReadingSession($document)->json('data.session_uuid');
+        $this->travel(15)->seconds();
+
+        $body = json_encode(['ticks' => [[
+            'clientEventId' => (string) Str::ulid(),
+            'pageNumber' => 1,
+            'activeMs' => 5000,
+            'occurredAt' => now()->toIso8601String(),
+        ]]]);
+
+        $this->sendBeacon('/api/reading-sessions/'.$sessionUuid.'/end', $body)
+            ->assertStatus(200)
+            ->assertJsonPath('ended', true)
+            ->assertJsonPath('accepted', 1);
+
+        $this->sendTicks($sessionUuid, [2 => 5000])->assertStatus(409);
+    }
+
     public function test_malformed_beacon_body_is_rejected_by_validation(): void
     {
         $user = $this->loginAsRegularUser();

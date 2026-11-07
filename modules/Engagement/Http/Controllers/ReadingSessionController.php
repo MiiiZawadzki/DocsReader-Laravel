@@ -73,8 +73,8 @@ readonly class ReadingSessionController
     {
         $session = $request->readingSession();
 
-        $this->recorder->end($session);
+        $accepted = $this->recorder->end($session, $request->input('ticks', []));
 
-        return response()->json(['ended' => true]);
+        return response()->json(['ended' => true, 'accepted' => $accepted]);
     }
 }

@@ -144,11 +144,17 @@ class EngagementRecorder
 
     /**
      * @param  ReadingSession  $session
-     * @return void
+     * @param  array<int, array{clientEventId: string, pageNumber: int, activeMs: int, occurredAt: string}>  $ticks
+     * @return int Number of final ticks credited
      */
-    public function end(ReadingSession $session): void
+    public function end(ReadingSession $session, array $ticks = []): int
     {
+        // Final ticks arrive with the end itself, so they can't race a separate end request and be rejected as late
+        $accepted = empty($ticks) ? 0 : $this->record($session, $ticks)['accepted'];
+
         $this->sessions->markEnded($session);
+
+        return $accepted;
     }
 
     /**

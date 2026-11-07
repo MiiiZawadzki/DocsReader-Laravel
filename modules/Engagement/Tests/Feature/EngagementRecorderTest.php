@@ -176,6 +176,19 @@ class EngagementRecorderTest extends FeatureTestCase
         $this->assertSame(0, ReadingPageTick::count());
     }
 
+    public function test_ending_a_session_credits_the_final_ticks_sent_with_it(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+        $session = $this->createSession($user->getId(), $document->id);
+        $this->travel(10)->seconds();
+
+        $accepted = $this->recorder()->end($session, [$this->tick(pageNumber: 1, activeMs: 5000)]);
+
+        $this->assertSame(1, $accepted);
+        $this->assertSame(5, $this->pageSeconds($user->getId(), $document->id, 1));
+        $this->assertNotNull($session->fresh()->ended_at);
+    }
+
     public function test_starting_a_session_ends_the_users_other_open_sessions_on_the_document(): void
     {
         [$user, $document] = $this->makeUserAndDocument();
