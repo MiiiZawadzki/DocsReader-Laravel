@@ -164,6 +164,50 @@ class EngagementRecorderTest extends FeatureTestCase
         $this->assertSame(15, $this->pageSeconds($user->getId(), $document->id, 1));
     }
 
+    public function test_starting_fresh_sessions_does_not_grant_a_fresh_grace_each_time(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+
+        // Restarting the session and claiming its grace straight away, over and over, with no time passing
+        for ($i = 0; $i < 5; $i++) {
+            $session = $this->recorder()->start($user->getId(), $document->id);
+            $this->recorder()->record($session, [$this->tick(pageNumber: 1, activeMs: 15000)]);
+        }
+
+        $this->assertSame(15, $this->pageSeconds($user->getId(), $document->id, 1));
+    }
+
+    public function test_reading_two_documents_at_once_shares_one_clock(): void
+    {
+        [$user, $first] = $this->makeUserAndDocument();
+        [, $second] = $this->makeUserAndDocument(owner: $user);
+        $firstSession = $this->createSession($user->getId(), $first->id);
+        $secondSession = $this->createSession($user->getId(), $second->id);
+
+        $this->travel(30)->seconds();
+
+        // 30s of wall-clock time plus the one-off grace is 45s in total, however it's split between documents
+        $this->recorder()->record($firstSession, array_map(fn() => $this->tick(pageNumber: 1, activeMs: 5000), range(1, 6)));
+        $this->recorder()->record($secondSession, array_map(fn() => $this->tick(pageNumber: 1, activeMs: 5000), range(1, 6)));
+
+        $this->assertSame(30, $this->pageSeconds($user->getId(), $first->id, 1));
+        $this->assertSame(15, $this->pageSeconds($user->getId(), $second->id, 1));
+    }
+
+    public function test_session_started_after_a_pause_gets_its_grace_again(): void
+    {
+        [$user, $document] = $this->makeUserAndDocument();
+        $first = $this->createSession($user->getId(), $document->id);
+        $this->recorder()->record($first, [$this->tick(pageNumber: 1, activeMs: 15000)]);
+
+        $this->travel(1)->hours();
+        $second = $this->createSession($user->getId(), $document->id);
+        $result = $this->recorder()->record($second, [$this->tick(pageNumber: 1, activeMs: 15000)]);
+
+        $this->assertSame(1, $result['accepted']);
+        $this->assertSame(30, $this->pageSeconds($user->getId(), $document->id, 1));
+    }
+
     public function test_ended_session_accepts_no_ticks(): void
     {
         [$user, $document] = $this->makeUserAndDocument();
@@ -208,11 +252,12 @@ class EngagementRecorderTest extends FeatureTestCase
 
     /**
      * @param  int|null  $totalPages
+     * @param  UserDTO|null  $owner  Reuse an existing user instead of creating one
      * @return array{0: UserDTO, 1: Document}
      */
-    private function makeUserAndDocument(?int $totalPages = null): array
+    private function makeUserAndDocument(?int $totalPages = null, ?UserDTO $owner = null): array
     {
-        $user = $this->makeUser();
+        $user = $owner ?? $this->makeUser();
         $document = Document::create([
             'uuid' => (string) Str::uuid(),
             'name' => 'Test document',

@@ -8,6 +8,7 @@ use Modules\Document\Api\DocumentApiInterface;
 use Modules\Engagement\Models\ReadingSession;
 use Modules\Engagement\Repositories\Contracts\PageProgressRepositoryInterface;
 use Modules\Engagement\Repositories\Contracts\PageTickRepositoryInterface;
+use Modules\Engagement\Repositories\Contracts\ReadingBudgetRepositoryInterface;
 use Modules\Engagement\Repositories\Contracts\ReadingSessionRepositoryInterface;
 
 class EngagementRecorder
@@ -20,6 +21,7 @@ class EngagementRecorder
         private readonly ReadingSessionRepositoryInterface $sessions,
         private readonly PageTickRepositoryInterface $ticks,
         private readonly PageProgressRepositoryInterface $progress,
+        private readonly ReadingBudgetRepositoryInterface $budgets,
         private readonly DocumentApiInterface $documentApi,
     ) {}
 
@@ -60,7 +62,9 @@ class EngagementRecorder
         }
 
         return DB::transaction(function () use ($session, $candidates) {
-            // Serialize batches of one session, so the duplicate check and the time budget see each other's writes
+            // Serialize every batch of the user (budget row first, then the session, always in that order), so the
+            // duplicate check and the time budget see each other's writes even across sessions and documents
+            $creditedUntilMs = $this->budgets->creditedUntilMsForUpdate($session->user_id);
             $locked = $this->sessions->findForUpdate($session->id);
             if ($locked === null || $locked->ended_at !== null) {
                 return $this->unchanged($session, ended: true);
@@ -72,11 +76,17 @@ class EngagementRecorder
             }
 
             $now = now();
-            $accepted = $this->withinTimeBudget($locked, $candidates, $now);
+            $budgetStartMs = $this->budgetStartMs($locked, $creditedUntilMs);
+            $accepted = $this->withinTimeBudget($candidates, $now->getTimestampMs() - $budgetStartMs);
 
             if (empty($accepted)) {
                 return $this->unchanged($locked);
             }
+
+            $this->budgets->setCreditedUntilMs(
+                $locked->user_id,
+                $budgetStartMs + array_sum(array_column($accepted, 'activeMs')),
+            );
 
             $rows = [];
             $perPageMs = [];
@@ -202,17 +212,30 @@ class EngagementRecorder
     }
 
     /**
-     * Keep ticks, in batch order, while their total fits the wall-clock time the session has been open
+     * Where the user's reading clock stands for this session. Credit runs on from the time already credited, so
+     * starting a fresh session or reading two documents at once can't claim the same wall-clock time twice.
+     * A session gets a one-off grace for client timer and network slack, but only over time nobody has been
+     * credited for yet
      *
      * @param  ReadingSession  $session
+     * @param  int  $creditedUntilMs
+     * @return int Epoch milliseconds.
+     */
+    private function budgetStartMs(ReadingSession $session, int $creditedUntilMs): int
+    {
+        return max($creditedUntilMs, $session->started_at->getTimestampMs() - self::BUDGET_GRACE_MS);
+    }
+
+    /**
+     * Keep ticks, in batch order, while their total fits the wall-clock time available to the user
+     *
      * @param  array<string, array{pageNumber: int, activeMs: int, occurredAt: Carbon}>  $candidates
-     * @param  Carbon  $now
+     * @param  int  $availableMs
      * @return array<string, array{pageNumber: int, activeMs: int, occurredAt: Carbon}>
      */
-    private function withinTimeBudget(ReadingSession $session, array $candidates, Carbon $now): array
+    private function withinTimeBudget(array $candidates, int $availableMs): array
     {
-        $elapsedMs = (int) max(0, $session->started_at->diffInMilliseconds($now));
-        $remainingMs = $elapsedMs + self::BUDGET_GRACE_MS - $this->ticks->totalActiveMsForSession($session->id);
+        $remainingMs = $availableMs;
 
         $accepted = [];
         foreach ($candidates as $clientEventId => $tick) {

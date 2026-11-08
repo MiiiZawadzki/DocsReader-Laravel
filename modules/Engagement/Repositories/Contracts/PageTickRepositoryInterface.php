@@ -22,14 +22,6 @@ interface PageTickRepositoryInterface
     public function existingClientEventIds(int $sessionId, array $clientEventIds): array;
 
     /**
-     * Total active time already recorded for the session
-     *
-     * @param  int  $sessionId
-     * @return int Milliseconds.
-     */
-    public function totalActiveMsForSession(int $sessionId): int;
-
-    /**
      * Furthest page reached by each session
      *
      * @param  array<string>  $sessionUuids

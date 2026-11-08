@@ -7,9 +7,11 @@ use Modules\Engagement\Api\EngagementApi;
 use Modules\Engagement\Api\EngagementApiInterface;
 use Modules\Engagement\Repositories\Contracts\PageProgressRepositoryInterface;
 use Modules\Engagement\Repositories\Contracts\PageTickRepositoryInterface;
+use Modules\Engagement\Repositories\Contracts\ReadingBudgetRepositoryInterface;
 use Modules\Engagement\Repositories\Contracts\ReadingSessionRepositoryInterface;
 use Modules\Engagement\Repositories\PageProgressRepository;
 use Modules\Engagement\Repositories\PageTickRepository;
+use Modules\Engagement\Repositories\ReadingBudgetRepository;
 use Modules\Engagement\Repositories\ReadingSessionRepository;
 use Modules\Engagement\Strategies\Contracts\EngagementRuleStrategyInterface;
 use Modules\Engagement\Strategies\EveryPageMeetsThresholdRule;
@@ -22,6 +24,7 @@ class EngagementServiceProvider extends ServiceProvider
         $this->app->bind(ReadingSessionRepositoryInterface::class, ReadingSessionRepository::class);
         $this->app->bind(PageTickRepositoryInterface::class, PageTickRepository::class);
         $this->app->bind(PageProgressRepositoryInterface::class, PageProgressRepository::class);
+        $this->app->bind(ReadingBudgetRepositoryInterface::class, ReadingBudgetRepository::class);
         $this->app->bind(EngagementApiInterface::class, EngagementApi::class);
 
         $this->app->bind(EngagementRuleStrategyInterface::class, EveryPageMeetsThresholdRule::class);

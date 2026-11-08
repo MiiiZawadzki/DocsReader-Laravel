@@ -39,17 +39,6 @@ class PageTickRepository implements PageTickRepositoryInterface
     }
 
     /**
-     * @param  int  $sessionId
-     * @return int
-     */
-    public function totalActiveMsForSession(int $sessionId): int
-    {
-        return (int) DB::table('reading_page_ticks')
-            ->where('reading_session_id', $sessionId)
-            ->sum('active_ms');
-    }
-
-    /**
      * @param  array<string>  $sessionUuids
      * @return array<string, int>
      */
