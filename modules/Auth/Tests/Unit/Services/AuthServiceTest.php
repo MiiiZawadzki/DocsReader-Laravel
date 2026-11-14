@@ -11,7 +11,10 @@ use Modules\User\Api\UserApiInterface;
 use Modules\User\DTO\UserDTO;
 use Modules\User\Models\User;
 use Tests\Unit\UnitTestCase;
+use Tymon\JWTAuth\JWT;
 use Tymon\JWTAuth\JWTGuard;
+use Tymon\JWTAuth\Manager;
+use Tymon\JWTAuth\Token;
 
 class AuthServiceTest extends UnitTestCase
 {
@@ -35,7 +38,7 @@ class AuthServiceTest extends UnitTestCase
             ->with($plainPassword)
             ->willReturn($hashedPassword);
 
-        $authService = new AuthService($userApi, $hasher, $auth);
+        $authService = new AuthService($userApi, $hasher, $auth, $this->createMock(JWT::class));
         $registerDto = new RegisterDataDTO($userData);
 
         $userApi
@@ -61,7 +64,7 @@ class AuthServiceTest extends UnitTestCase
         $hasher = $this->createMock(Hasher::class);
         $auth = $this->createMock(AuthFactory::class);
         $guard = $this->createMock(JWTGuard::class);
-        $authService = new AuthService($userApi, $hasher, $auth);
+        $authService = new AuthService($userApi, $hasher, $auth, $this->createMock(JWT::class));
 
         $credentialsData = [
             'email' => 'john.doe@example.com',
@@ -116,7 +119,7 @@ class AuthServiceTest extends UnitTestCase
         $hasher = $this->createMock(Hasher::class);
         $auth = $this->createMock(AuthFactory::class);
         $guard = $this->createMock(JWTGuard::class);
-        $authService = new AuthService($userApi, $hasher, $auth);
+        $authService = new AuthService($userApi, $hasher, $auth, $this->createMock(JWT::class));
 
         $credentialsData = [
             'email' => 'john.doe@example.com',
@@ -143,22 +146,40 @@ class AuthServiceTest extends UnitTestCase
         $this->assertNull($result);
     }
 
-    public function test_logout_invalidates_token_on_jwt_guard(): void
+    public function test_logout_revokes_the_token_in_the_refresh_flow(): void
     {
-        $userApi = $this->createMock(UserApiInterface::class);
-        $hasher = $this->createMock(Hasher::class);
-        $auth = $this->createMock(AuthFactory::class);
-        $authService = new AuthService($userApi, $hasher, $auth);
+        $jwt = $this->createMock(JWT::class);
+        $manager = $this->createMock(Manager::class);
+        $token = new Token('header.payload.signature');
+        $authService = new AuthService(
+            $this->createMock(UserApiInterface::class),
+            $this->createMock(Hasher::class),
+            $this->createMock(AuthFactory::class),
+            $jwt,
+        );
 
-        $guard = $this->createMock(JWTGuard::class);
+        $jwt->method('getToken')->willReturn($token);
+        $jwt->method('manager')->willReturn($manager);
 
-        $auth->expects($this->once())
-            ->method('guard')
-            ->with('jwt')
-            ->willReturn($guard);
+        // The refresh flow lets an expired, still refreshable token be revoked as well
+        $manager->expects($this->once())->method('setRefreshFlow')->willReturnSelf();
+        $manager->expects($this->once())->method('invalidate')->with($token);
 
-        $guard->expects($this->once())
-            ->method('logout');
+        $authService->logout();
+    }
+
+    public function test_logout_without_a_token_does_nothing(): void
+    {
+        $jwt = $this->createMock(JWT::class);
+        $authService = new AuthService(
+            $this->createMock(UserApiInterface::class),
+            $this->createMock(Hasher::class),
+            $this->createMock(AuthFactory::class),
+            $jwt,
+        );
+
+        $jwt->method('getToken')->willReturn(null);
+        $jwt->expects($this->never())->method('manager');
 
         $authService->logout();
     }
@@ -168,7 +189,7 @@ class AuthServiceTest extends UnitTestCase
         $userApi = $this->createMock(UserApiInterface::class);
         $hasher = $this->createMock(Hasher::class);
         $auth = $this->createMock(AuthFactory::class);
-        $authService = new AuthService($userApi, $hasher, $auth);
+        $authService = new AuthService($userApi, $hasher, $auth, $this->createMock(JWT::class));
 
         $guard = $this->createMock(JWTGuard::class);
 

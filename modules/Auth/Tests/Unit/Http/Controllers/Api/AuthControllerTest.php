@@ -36,7 +36,7 @@ class AuthControllerTest extends UnitTestCase
                 'secure' => true,
                 'same_site' => 'lax',
             ],
-            'jwt' => ['ttl' => 60],
+            'jwt' => ['ttl' => 60, 'refresh_ttl' => 20160],
         ]));
         Container::setInstance($container);
     }
@@ -146,7 +146,8 @@ class AuthControllerTest extends UnitTestCase
             ->with(
                 'jwt_token',
                 'jwt.token.value',
-                60,
+                // The cookie lives as long as the token can be refreshed, not just the token's own ttl
+                20160,
                 '/',
                 null,
                 true,

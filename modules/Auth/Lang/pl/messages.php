@@ -17,6 +17,7 @@ return [
     'password' => 'Podane hasło jest nieprawidłowe.',
     'throttle' => 'Zbyt wiele prób logowania. Spróbuj ponownie za :seconds sekund.',
     'register_success' => 'Rejestracja zakończona sukcesem, możesz się teraz zalogować.',
+    'session_expired' => 'Twoja sesja wygasła. Zaloguj się ponownie.',
     'logout_success' => 'Zostałeś pomyślnie wylogowany.',
 ];
 

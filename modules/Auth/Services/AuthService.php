@@ -9,6 +9,8 @@ use Modules\Auth\DTO\LoginUserDTO;
 use Modules\Auth\DTO\RegisterDataDTO;
 use Modules\User\Api\UserApiInterface;
 use Modules\User\DTO\UserDTO;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\JWT;
 
 class AuthService
 {
@@ -16,6 +18,7 @@ class AuthService
         private readonly UserApiInterface $userApi,
         private readonly Hasher $hasher,
         private readonly AuthFactory $auth,
+        private readonly JWT $jwt,
     ) {
     }
 
@@ -48,12 +51,29 @@ class AuthService
 
     public function logout(): void
     {
-        $this->guard()->logout();
+        $token = $this->jwt->getToken();
+        if (!$token) {
+            return;
+        }
+
+        try {
+            // The refresh flow skips the expiry check, so a token that's expired but still refreshable gets revoked too
+            $this->jwt->manager()->setRefreshFlow()->invalidate($token);
+        } catch (JWTException) {
+            // Malformed or past refresh_ttl: already unusable, nothing to revoke
+        }
     }
 
-    public function refresh(): string
+    /**
+     * @return string|null New token, or null when the token can't be refreshed
+     */
+    public function refresh(): ?string
     {
-        return $this->guard()->refresh();
+        try {
+            return $this->guard()->refresh();
+        } catch (JWTException) {
+            return null;
+        }
     }
 
     private function guard(): Guard

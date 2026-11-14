@@ -13,6 +13,7 @@ use Modules\Auth\Http\Requests\LoginRequest;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\Auth\Services\AuthService;
 use Modules\User\Api\UserApiInterface;
+use Symfony\Component\HttpFoundation\Cookie;
 
 class AuthController
 {
@@ -82,6 +83,13 @@ class AuthController
     {
         $token = $this->service->refresh();
 
+        if ($token === null) {
+            return (new JsonResponse(
+                ['message' => $this->translator->get('auth::messages.session_expired')],
+                401
+            ))->withCookie($this->forgetAuthCookie());
+        }
+
         return (new JsonResponse(['message' => 'refreshed'], 200))
             ->withCookie($this->makeAuthCookie($token));
     }
@@ -93,25 +101,30 @@ class AuthController
         return (new JsonResponse(
             ['message' => $this->translator->get('auth::messages.logout_success')],
             200
-        ))->withCookie($this->cookieJar->forget(
-            config('auth_cookie.name'),
-            config('auth_cookie.path'),
-            config('auth_cookie.domain'),
-        ));
+        ))->withCookie($this->forgetAuthCookie());
     }
 
-    private function makeAuthCookie(string $token): \Symfony\Component\HttpFoundation\Cookie
+    private function makeAuthCookie(string $token): Cookie
     {
         return $this->cookieJar->make(
             name: config('auth_cookie.name'),
             value: $token,
-            minutes: (int) config('jwt.ttl'),
+            minutes: (int) config('jwt.refresh_ttl'),
             path: config('auth_cookie.path'),
             domain: config('auth_cookie.domain'),
             secure: (bool) config('auth_cookie.secure'),
             httpOnly: true,
             raw: false,
             sameSite: config('auth_cookie.same_site'),
+        );
+    }
+
+    private function forgetAuthCookie(): Cookie
+    {
+        return $this->cookieJar->forget(
+            config('auth_cookie.name'),
+            config('auth_cookie.path'),
+            config('auth_cookie.domain'),
         );
     }
 }

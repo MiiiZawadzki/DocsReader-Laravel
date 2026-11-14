@@ -2,9 +2,11 @@
 
 namespace Modules\Auth\Tests\Feature\Http\Controllers;
 
+use Illuminate\Testing\TestResponse;
 use Modules\Auth\Http\Controllers\AuthController;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use Symfony\Component\HttpFoundation\Cookie;
 use Tests\Feature\FeatureTestCase;
 
 #[CoversClass(AuthController::class)]
@@ -144,5 +146,96 @@ class AuthControllerTest extends FeatureTestCase
         $this->assertNotNull($refreshed);
         $this->assertNotSame($original, $refreshed->getValue());
         $this->assertTrue($refreshed->isHttpOnly());
+    }
+
+    public function test_login_cookie_outlives_the_token_until_it_can_no_longer_be_refreshed(): void
+    {
+        $this->makeUser();
+
+        $cookie = $this->postJson('/api/login', [
+            'email' => 'john.doe@example.com',
+            'password' => 'SecurePassword123!',
+        ])->headers->getCookies()[0];
+
+        $this->assertEqualsWithDelta(now()->addMinutes(config('jwt.refresh_ttl'))->timestamp, $cookie->getExpiresTime(), 5);
+    }
+
+    public function test_expired_token_can_be_refreshed(): void
+    {
+        $token = $this->loginAndGetToken();
+        $this->travel(config('jwt.ttl') + 1)->minutes();
+        // The guard remembers the user from the login request; a real request starts without it
+        $this->app['auth']->forgetGuards();
+
+        $this->withToken($token)->getJson('/api/user')->assertStatus(401);
+
+        $response = $this->withToken($token)->postJson('/api/refresh');
+
+        $response->assertStatus(200);
+        $refreshed = $this->authCookie($response)->getValue();
+        $this->assertNotSame($token, $refreshed);
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($refreshed)->getJson('/api/user')->assertStatus(200);
+    }
+
+    public function test_token_past_the_refresh_window_cannot_be_refreshed(): void
+    {
+        $token = $this->loginAndGetToken();
+        $this->travel(config('jwt.refresh_ttl') + 1)->minutes();
+
+        $response = $this->withToken($token)->postJson('/api/refresh');
+
+        $response->assertStatus(401);
+        $response->assertJson(['message' => __('auth::messages.session_expired')]);
+        $this->assertEmpty($this->authCookie($response)->getValue());
+    }
+
+    public function test_refresh_without_a_token_returns_401(): void
+    {
+        $this->postJson('/api/refresh')->assertStatus(401);
+    }
+
+    public function test_a_token_cannot_be_refreshed_twice(): void
+    {
+        $token = $this->loginAndGetToken();
+
+        $this->withToken($token)->postJson('/api/refresh')->assertStatus(200);
+        // Past the blacklist grace period, which only covers requests already in flight with the old token
+        $this->travel(config('jwt.blacklist_grace_period') + 1)->seconds();
+
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->postJson('/api/refresh')->assertStatus(401);
+    }
+
+    public function test_logout_with_an_expired_token_revokes_it(): void
+    {
+        $token = $this->loginAndGetToken();
+        $this->travel(config('jwt.ttl') + 1)->minutes();
+
+        $response = $this->withToken($token)->postJson('/api/logout');
+
+        $response->assertStatus(200);
+        $this->assertEmpty($this->authCookie($response)->getValue());
+
+        $this->travel(config('jwt.blacklist_grace_period') + 1)->seconds();
+        $this->app['auth']->forgetGuards();
+        $this->withToken($token)->postJson('/api/refresh')->assertStatus(401);
+    }
+
+    private function loginAndGetToken(): string
+    {
+        $this->makeUser();
+
+        return $this->postJson('/api/login', [
+            'email' => 'john.doe@example.com',
+            'password' => 'SecurePassword123!',
+        ])->headers->getCookies()[0]->getValue();
+    }
+
+    private function authCookie(TestResponse $response): Cookie
+    {
+        return collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === config('auth_cookie.name'));
     }
 }
